@@ -1,0 +1,170 @@
+<html>
+	<head>
+		<title>Bitwig Studio | Ableton Push</title>
+		<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta http-equiv="Content-Language" content="en"/>
+		<meta name="description" content="Using an Abletono Push controller in Bitwig Studio."/>
+		<meta name="author" content="Jürgen Moßgraber"/>
+		<style>
+			BODY
+			{
+				max-width: 800px;
+			}
+			BODY, TABLE, P, LI
+			{
+				font-family: Arial;
+				font-size: 14pt;
+			}
+			LI, TD
+			{
+				padding-bottom: 4px;
+			}
+			TD:first-child
+			{
+				font-weight: bold;
+				width: 200px;
+			}
+			.small
+			{
+				font-size: 10pt;
+			}
+		</style>
+	</head>
+	<body>
+	
+		<h1>Bitwig Studio | Ableton Push</h1>
+
+		<p>
+		Support script for Abletons Push controller.
+		You can control track parameters, devices, transport, session view and play the pads.
+		</p>
+		
+		<h2>Changes</h2>
+		<ul>
+			<li>1.02
+				<ul>
+					<li>Added auto configuration string for Linux.</li>
+					<li>Performance improvements.</li>
+				</ul>
+			</li>
+			<li>1.01
+				<ul>
+					<li>Shift + Undo now executes Redo.</li>
+				</ul>
+			</li>
+		</ul>
+
+		<h2>Features</h2>
+
+		<table>
+			<tr><td>Play			</td><td>Start/Stop playback</td></tr>
+			<tr><td>Shift+Play		</td><td>Toggle repeat</td></tr>
+			<tr><td>Record			</td><td>Start/Stop recording</td></tr>
+
+			<tr><td>Automation		</td><td>Toggle Automation Write of selected track</td></tr>
+			<!--<tr><td>Quantize		</td><td>Quantize notes in midi editor to grid</td></tr>-->
+			<tr><td>Double			</td><td>Duplicates the selected item(s), notes, etc.</td></tr>
+			<tr><td>Delete			</td><td>Like pressing the delete key</td></tr>
+			<tr><td>Undo			</td><td>Undo. Press Shift for Redo.</td></tr>
+
+			<tr><td>Small Knob 1	</td><td>Change tempo</td></tr>
+			<tr><td>Small Knob 2	</td><td>Move play cursor (press shift for finer adjustment)</td></tr>
+
+			<tr><td>Metronome		</td><td>Toggle metronome</td></tr>
+			<tr><td>Tap Tempo		</td><td>Tap Tempo</td></tr>
+
+			<tr><td>Mute			</td><td>Toggles mute state of selected track</td></tr>
+			<tr><td>Solo			</td><td>Toggles solo state of selected track</td></tr>
+
+			<!--<tr><td>Add Effect		</td><td>Opens the "Add Effect" window</td></tr>-->
+			<!--<tr><td>Add Track		</td><td>Opens the "Add track template" window</td></tr>-->
+
+			<tr><td>Knob 9			</td><td>Changes Master Volume</td></tr>
+		</table>
+
+		<h2>Edit Modes</h2>
+		
+		<ol>
+			<li>Volume - Press "Volume" to enter
+				<ul>
+					<li>8 edit knobs: Change volume of selected 8 tracks</li>
+					<li>1st 8 button row: Select a track</li>
+					<li>2nd 8 button row: Toggle record arm of track</li>
+					<!--<li>Shift + 2nd 8 button row: Toggle monitor of track</li>-->
+					<li>Left/right arrows: Select next/previous track bank</li>
+					<li>Left/Right buttons: Select next/previous track</li>
+				</ul>
+			</li>
+
+			<li>Pan & Send - Press "Pan & Send" to enter (press multiple times to switch between the 7 modes)
+				<ul>
+					<li>8 edit knobs: Change pan/send1-6 of selected 8 tracks</li>
+					<li>1st 8 button row: Select a track</li>
+					<li>2nd 8 button row: Toggle record arm of track</li>
+					<!--<li>Shift + 2nd 8 button row: Toggle monitor of track</li>-->
+					<li>Left/right arrows: Select next/previous track bank</li>
+					<li>Left/Right buttons: Select next/previous track</li>
+				</ul>
+			</li>
+
+			<li>Track - Press "Track" to enter
+				<ul>
+					<li>8 edit knobs: Change volume/pan/Send1-6 of selected track</li>
+					<li>1st 8 button row: Select a track</li>
+					<li>2nd 8 button row: Toggle record arm of track</li>
+					<!--<li>Shift + 2nd 8 button row: Toggle monitor of track</li>-->
+					<li>Left/right arrows: Select next/previous track bank</li>
+					<li>Left/Right buttons: Select next/previous track</li>
+				</ul>
+			</li>
+
+			<li>Device - Press "Device" to enter
+				<ul>
+					<li>8 edit knobs: Change parameters 1-8/9-16 of selected device (FX)</li>
+					<li>1st 8 button row:
+						<ul>
+							<li>Select a device of the selected track</li>
+							<li>Pressing it twice opens/closes the devices window</li>
+						</ul>
+					</li>
+					<li>2nd 8 button row: Enable/Disable the selected device</li>
+					<!--<li>Shift + 2nd 8 button row: Toggle monitor of track</li>-->
+					<li>Left/right arrows: Select parameters 1-8/9-16 of selected device</li>
+					<li>Left/Right buttons: Select next/previous device</li>
+				</ul>
+			</li>
+
+			<li>Master - Press "Master" to enter
+				<ul>
+					<li>8 edit knobs: Change volume and pan of master track</li>
+				</ul>
+			</li>
+		</ol>
+
+		<h2>Playing the pads</h2>
+
+		<ul>
+			<li>The key layout is like running the Push with Ableton</li>
+			<li>Pitch Bender changes pitch</li>
+			<li>Press "Scales" (keep pressed) to change the scales (Major, Minor, Chromatic)</li>
+				and the root note with the 16 buttons below the display</li>
+		</ul>
+		
+		<h2>Session Mode</h2>
+
+		<p>Press "Session" to enter. All the buttons and knobs behave like in Play mode with the
+		following exceptions:</p>
+		<ul>
+			<li>The buttons on the grid start/record the clips.</li>
+			<li>The 1/4 to 1/32t buttons start scenes.</li>
+			<li>The arrow keys scroll the grid.</li>
+		</ul>
+
+		<p class="small">Written by Jürgen Moßgraber - <a href="http://www.mossgrabers.de">mossgrabers.de</a><br/>
+		(c) 2014<br/>
+		Licensed under GPLv3 - See <a href="http://www.gnu.org/licenses/gpl.html">http://www.gnu.org/licenses/gpl.html</a>
+		</p>
+
+	</body>
+</html>
+
