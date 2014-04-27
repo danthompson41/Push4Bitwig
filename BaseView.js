@@ -401,7 +401,10 @@ BaseView.prototype.onAddTrack = function ()
 
 BaseView.prototype.onNote = function ()
 {
-	this.push.setActiveView (VIEW_PLAY);
+	if (this.push.isActiveView (VIEW_PLAY))
+		this.push.setActiveView (VIEW_SEQUENCER);
+	else
+		this.push.setActiveView (VIEW_PLAY);
 };
 
 BaseView.prototype.onSession = function ()

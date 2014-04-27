@@ -74,8 +74,9 @@ var INC_FRACTION_TIME      = 1.0;	    // 1 beat
 var INC_FRACTION_TIME_SLOW = 1.0 / 20;	// 1/20th of a beat
 var TEMPO_RESOLUTION       = 647;
 
-var VIEW_PLAY    = 0;
-var VIEW_SESSION = 1;
+var VIEW_PLAY      = 0;
+var VIEW_SESSION   = 1;
+var VIEW_SEQUENCER = 2;
 
 
 loadAPI(1);
@@ -87,6 +88,7 @@ load("Push.js");
 load("Scales.js");
 load("PlayView.js");
 load("SessionView.js");
+load("SequencerView.js");
 
 var previousMode = null;
 var currentMode = MODE_TRACK;
@@ -126,10 +128,11 @@ var currentScaleOffset = 0; // C
 var currentScale       = SCALE_MAJOR;
 var currentOctave      = 0;
 
-var output      = null;
-var push        = null;
-var playView    = null;
-var sessionView = null;
+var output        = null;
+var push          = null;
+var playView      = null;
+var sessionView   = null;
+var sequencerView = null;
 
 host.defineController ("Ableton", "Push", "1.0", "D69AFBF0-B71E-11E3-A5E2-0800200C9A66");
 host.defineMidiPorts (1, 1);
@@ -143,8 +146,10 @@ function init()
 	push = new Push (output);
 	playView = new PlayView ();
 	sessionView = new SessionView ();
+	sequencerView = new SequencerView ();
 	push.addView (VIEW_PLAY, playView);
 	push.addView (VIEW_SESSION, sessionView);
+	push.addView (VIEW_SEQUENCER, sequencerView);
 
 	var port = host.getMidiInPort(0);
 	port.setMidiCallback (onMidi);
@@ -394,12 +399,12 @@ function init()
 		for (var j = 0; j < 6; j++)
 		{
 			var s = t.getSend (j);
-			s.addValueObserver (128, makeDoubleIndexedFunction (i, j, function (index1, index2, value)
+			s.addValueObserver (128, doDoubleIndex (i, j, function (index1, index2, value)
 			{
 				tracks[index1].sends[index2].volume = value;
 				updateDisplay (true);
 			}));
-			s.addValueDisplayObserver (8, "", makeDoubleIndexedFunction (i, j, function (index1, index2, text)
+			s.addValueDisplayObserver (8, "", doDoubleIndex (i, j, function (index1, index2, text)
 			{
 				tracks[index1].sends[index2].volumeStr = text;
 				updateDisplay (true);

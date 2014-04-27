@@ -14,7 +14,7 @@ SessionView.prototype = new BaseView ();
 SessionView.prototype.updateNoteMapping = function ()
 {
 	noteInput.setKeyTranslationTable (initArray (-1, 128));
-}
+};
 
 SessionView.prototype.updateArrows = function ()
 {
@@ -158,4 +158,4 @@ SessionView.prototype.drawPad = function (port, slot, x, y, isArmed)
 		port.sendMidi (0x90 + 10, n, GREEN_HI);
 	else if (slot.isRecording)
 		port.sendMidi (0x90, n, RED_HI);
-}
+};

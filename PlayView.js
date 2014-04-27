@@ -21,7 +21,7 @@ PlayView.prototype.updateNoteMapping = function ()
 		}
 	}
 	noteInput.setKeyTranslationTable (noteMap);
-}
+};
 
 PlayView.prototype.onActivate = function ()
 {

@@ -234,14 +234,14 @@ Push.prototype.handleMidi = function (status, data1, data2)
 			this.handleCC (data1, data2);
 			break;
 	}
-}
+};
 
 Push.prototype.handleGrid = function (note, velocity)
 {
 	var view = this.getActiveView ();
 	if (view != null)
 		view.onGrid (note, velocity);
-}
+};
 
 Push.prototype.handleCC = function (cc, value)
 {
@@ -344,7 +344,7 @@ Push.prototype.handleCC = function (cc, value)
 		// Shift Key
 		case 49:
 			this.shiftPressed = value == 127;
-			sendCC (49, this.shiftPressed ? BUTTON_ON : BUTTON_OFF);
+			this.output.sendCC (49, this.shiftPressed ? BUTTON_ON : BUTTON_OFF);
 			view.onShift (this.shiftPressed);
 			break;
 			

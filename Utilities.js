@@ -7,6 +7,14 @@ function toggleValue (value)
 	return !value;
 }
 
+function doObject (object, f)
+{
+	return function ()
+	{
+		f.apply (object, arguments);
+	};
+}
+
 function doIndex (index, f)
 {
 	return function ()
@@ -18,7 +26,7 @@ function doIndex (index, f)
 	};
 }
 
-function makeDoubleIndexedFunction (index1, index2, f)
+function doDoubleIndex (index1, index2, f)
 {
 	return function ()
 	{
