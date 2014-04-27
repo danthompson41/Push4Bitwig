@@ -125,7 +125,7 @@ var cursorTrack = null;
 var noteInput = null;
 
 var currentScaleOffset = 0; // C
-var currentScale       = SCALE_MAJOR;
+var currentScale       = 1;	// Major
 var currentOctave      = 0;
 
 var output        = null;
@@ -644,34 +644,34 @@ function updateDisplay (valueChange)
 		case MODE_SCALES:
 			var o = 2 + currentOctave;
 			var noteName = NOTE_NAMES[SCALE_OFFSETS[currentScaleOffset]];
-			var row0 =
-				pad (noteName + o + ' to ' + noteName + (o + 4), 17, ' ') + '    ' +
+			push.sendRow (0, 
+				pad (RIGHT_ARROW + SCALES[currentScale].name, 17, ' ') +
 				'                 ' +
 				'                 ' +
-				'                 ';
-			push.sendRow (0, row0);
-			
-			push.clearRow (1);
-			
-			var row2 = 
-				(currentScale == SCALE_MAJOR ? RIGHT_ARROW : ' ') + 'Major     ' +
+				pad (noteName + o + ' to ' + noteName + (o + 4), 17, ' '));
+			push.sendRow (1,
+				(currentScale + 1 < SCALES.length ? pad (' ' + SCALES[currentScale + 1].name, 17, ' ') : '                 ') +
+				'                 ' +
+				'                 ' +
+				'                 ');
+			push.sendRow (2, 
+				(currentScale + 2 < SCALES.length ? pad (' ' + SCALES[currentScale + 2].name, 8, ' ') : '        ') +
+				'   ' +
 				(currentScaleOffset == 0 ? RIGHT_ARROW : ' ') + 'C      ' +
 				(currentScaleOffset == 1 ? RIGHT_ARROW : ' ') + 'G       ' +
 				(currentScaleOffset == 2 ? RIGHT_ARROW : ' ') + 'D      ' +
 				(currentScaleOffset == 3 ? RIGHT_ARROW : ' ') + 'A       ' +
 				(currentScaleOffset == 4 ? RIGHT_ARROW : ' ') + 'E      ' + 
-				(currentScaleOffset == 5 ? RIGHT_ARROW : ' ') + 'B     ' + 
-				(currentScale == SCALE_CHROMATIC ? RIGHT_ARROW : ' ') + 'Chromat';
-			var row3 = 
-				(currentScale == SCALE_MINOR ? RIGHT_ARROW : ' ') + 'Minor     ' +
+				(currentScaleOffset == 5 ? RIGHT_ARROW : ' ') + 'B             ');
+			push.sendRow (3, 
+				(currentScale + 3 < SCALES.length ? pad (' ' + SCALES[currentScale + 3].name, 8, ' ') : '        ') +
+				'   ' +
 				(currentScaleOffset == 6 ? RIGHT_ARROW : ' ') + 'F      ' +
 				(currentScaleOffset == 7 ? RIGHT_ARROW : ' ') + 'Bb      ' +
 				(currentScaleOffset == 8 ? RIGHT_ARROW : ' ') + 'Eb     ' +
 				(currentScaleOffset == 9 ? RIGHT_ARROW : ' ') + 'Ab      ' +
 				(currentScaleOffset == 10 ? RIGHT_ARROW : ' ') + 'Db     ' +
-				(currentScaleOffset == 11 ? RIGHT_ARROW : ' ') + 'Gb            ';
-			push.sendRow (2, row2);
-			push.sendRow (3, row3);
+				(currentScaleOffset == 11 ? RIGHT_ARROW : ' ') + 'Gb            ');
 
 			for (var i = 0; i < 8; i++)
 			{

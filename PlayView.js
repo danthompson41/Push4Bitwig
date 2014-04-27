@@ -14,9 +14,10 @@ PlayView.prototype.updateNoteMapping = function ()
 	var t = getSelectedTrack ();
 	if (t != null && t.canHoldNotes)
 	{
+		var matrix = SCALES[currentScale].matrix;
 		for (var note = 36; note < 100; note++)
 		{
-			var n = (SCALE_NOTES[currentScale][note - 36] + SCALE_OFFSETS[currentScaleOffset] + 36 + currentOctave * 12);
+			var n = (matrix[note - 36] + SCALE_OFFSETS[currentScaleOffset] + 36 + currentOctave * 12);
 			noteMap[note] = n < 0 || n > 127 ? -1 : n;
 		}
 	}
@@ -61,7 +62,14 @@ PlayView.prototype.drawGrid = function ()
 	var t = getSelectedTrack ();
 	var isKeyboardEnabled = t != null && t.canHoldNotes;
 	for (var i = 36; i < 100; i++)
-		output.sendNote (i, isKeyboardEnabled ? SCALE_COLORS[currentScale][i - 36] : BLACK);
+		output.sendNote (i, isKeyboardEnabled ? this.getScaleColor (i) : BLACK);
+};
+
+PlayView.prototype.getScaleColor = function (note)
+{
+	return currentScale == SCALE_CHROMATIC ? 
+		SCALE_CHROMATIC_COLORS[note - 36] :
+		SCALES[currentScale].matrix[note - 36] % 12 == 0 ? BLUE_LGHT : WHITE_HI;
 };
 
 PlayView.prototype.onGrid = function (note, velocity)
@@ -71,14 +79,20 @@ PlayView.prototype.onGrid = function (note, velocity)
 		return;
 
 	// Light the pad
-	var index = note - 36;
-	output.sendNote (note, velocity == 0 ? SCALE_COLORS[currentScale][index] : GREEN_HI);
-	if (currentScale == SCALE_MINOR || currentScale == SCALE_MAJOR)
+	output.sendNote (note, velocity == 0 ? this.getScaleColor (note) : GREEN_HI);
+	if (currentScale != SCALE_CHROMATIC)
 	{
+		var index = note - 36;
 		if (index % 8 > 2 && index + 5 < 64)
-			output.sendNote (note + 5, velocity == 0 ? SCALE_COLORS[currentScale][index + 5] : GREEN_HI);
+		{
+			var upNote = note + 5;
+			output.sendNote (upNote, velocity == 0 ? this.getScaleColor (upNote) : GREEN_HI);
+		}
 		if (index % 8 < 5 && index - 5 > 0)
-			output.sendNote (note - 5, velocity == 0 ? SCALE_COLORS[currentScale][index - 5] : GREEN_HI);
+		{
+			var downNote = note - 5;
+			output.sendNote (downNote, velocity == 0 ? this.getScaleColor (downNote) : GREEN_HI);
+		}
 	}
 };
 

@@ -138,6 +138,7 @@ BaseView.prototype.onTapTempo = function ()
 	}
 };
 
+var SKIPPER = false;
 BaseView.prototype.onValueKnob = function (index, value)
 {
 	switch (currentMode)
@@ -216,7 +217,17 @@ BaseView.prototype.onValueKnob = function (index, value)
 			break;
 			
 		case MODE_SCALES:
-			// Not used
+			if (index == 0)
+			{
+				// Slow down scrolling
+				SKIPPER = !SKIPPER;
+				if (SKIPPER)
+					return;
+				currentScale = value <= 61 ? Math.min (currentScale + 1, SCALES.length - 1) : Math.max (currentScale - 1, 0);
+				this.updateNoteMapping ();
+				updateDisplay ();
+				this.drawGrid ();
+			}
 			break;
 	}
 };
@@ -229,25 +240,33 @@ BaseView.prototype.onValueKnob9 = function (value)
 
 BaseView.prototype.onFirstRow = function (index)
 {
-	if (currentMode == MODE_DEVICE)
+	switch (currentMode)
 	{
-		if (index == 7)
-			device.toggleEnabledState ();
+		case MODE_DEVICE:
+			if (index == 7)
+				device.toggleEnabledState ();
+			break;
+	
+		case MODE_SCALES:
+			if (index == 0)
+			{
+				currentScale = Math.max (currentScale - 1, 0);
+				this.drawGrid ();
+			}
+			else if (index > 0 && index < 7)
+				currentScaleOffset = index - 1;
+			this.updateNoteMapping ();
+			updateDisplay ();
+			break;
+
+		case MODE_MASTER:
+			// Not used
+			break;
+			
+		default:
+			trackBank.getTrack (index).select ();
+			break;
 	}
-	else if (currentMode == MODE_SCALES)
-	{
-		if (index == 0)
-			currentScale = SCALE_MAJOR;
-		else if (index == 7)
-			currentScale = SCALE_CHROMATIC;
-		else
-			currentScaleOffset = index - 1;
-		this.updateNoteMapping ();
-		updateDisplay ();
-		this.drawGrid ();
-	}
-	else if (currentMode != MODE_MASTER)
-		trackBank.getTrack (index).select ();
 };
 
 // Rec arm / enable monitor buttons
@@ -257,7 +276,7 @@ BaseView.prototype.onSecondRow = function (index)
 	{
 		if (index == 0)
 		{
-			currentScale = SCALE_MINOR;
+			currentScale = Math.min (currentScale + 1, SCALES.length - 1);
 			this.drawGrid ();
 		}
 		else if (index != 7)
