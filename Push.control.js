@@ -186,7 +186,6 @@ function init()
 	masterTrack.addNameObserver (8, '', function (name)
 	{
 		master.name = name;
-		updateDisplay ();
 	});
 	// Master Track selection
 	masterTrack.addIsSelectedObserver (function (isSelected)
@@ -195,7 +194,6 @@ function init()
 		if (isSelected)
 			previousMode = currentMode;
 		currentMode = isSelected ? MODE_MASTER : (previousMode ? previousMode : MODE_TRACK);
-		updateDisplay ();
 		updateMode ();
 	});
 	
@@ -203,19 +201,16 @@ function init()
 	masterTrack.getMute ().addValueObserver (function (isMuted)
 	{
 		master.mute = isMuted;
-		updateDisplay ();
 	});
 	// Master Track Solo
 	masterTrack.getSolo ().addValueObserver (function (isSoloed)
 	{
 		master.solo = isSoloed;
-		updateDisplay ();
 	});
 	// Master Track Arm
 	masterTrack.getArm ().addValueObserver (function (isArmed)
 	{
 		master.recarm = isArmed;
-		updateDisplay ();
 	});
 	
 	// Master Track volume value & text
@@ -223,12 +218,10 @@ function init()
 	v.addValueObserver (128, function (value)
 	{
 		master.volume = value;
-		updateDisplay (true);
 	});
 	v.addValueDisplayObserver (8, "", function (text)
 	{
 		master.volumeStr = text;
-		updateDisplay (true);
 	});
 	
 	// Master Track Pan value & text
@@ -236,12 +229,10 @@ function init()
 	p.addValueObserver (128, function (value)
 	{
 		master.pan = value;
-		updateDisplay (true);
 	});
 	p.addValueDisplayObserver (8, "", function (text)
 	{
 		master.panStr = text;
-		updateDisplay (true);
 	});
 	
 	
@@ -278,7 +269,6 @@ function init()
 		t.addNameObserver (8, '', doIndex (i, function (index, name)
 		{
 			tracks[index].name = name;
-			updateDisplay ();
 		}));
 		// Track selection
 		t.addIsSelectedObserver (doIndex (i, function (index, isSelected)
@@ -295,33 +285,24 @@ function init()
 				}
 				updateMode ();
 			}
-			updateDisplay ();
 			if (push.isActiveView (VIEW_PLAY))
-			{
-				push.redrawGrid ();
 				push.getActiveView ().updateNoteMapping ();
-			}
 		}));
 		
 		// Track Mute
 		t.getMute ().addValueObserver (doIndex (i, function (index, isMuted)
 		{
 			tracks[index].mute = isMuted;
-			updateDisplay ();
 		}));
 		// Track Solo
 		t.getSolo ().addValueObserver (doIndex (i, function (index, isSoloed)
 		{
 			tracks[index].solo = isSoloed;
-			updateDisplay ();
 		}));
 		// Track Arm
 		t.getArm ().addValueObserver (doIndex (i, function (index, isArmed)
 		{
 			tracks[index].recarm = isArmed;
-			updateDisplay ();
-			if (push.isActiveView (VIEW_SESSION))
-				push.redrawGrid ();
 		}));
 		
 		// Track volume value & text
@@ -329,12 +310,10 @@ function init()
 		v.addValueObserver (128, doIndex (i, function (index, value)
 		{
 			tracks[index].volume = value;
-			updateDisplay (true);
 		}));
 		v.addValueDisplayObserver (8, "", doIndex (i, function (index, text)
 		{
 			tracks[index].volumeStr = text;
-			updateDisplay (true);
 		}));
 		
 		// Track Pan value & text
@@ -342,20 +321,16 @@ function init()
 		p.addValueObserver (128, doIndex (i, function (index, value)
 		{
 			tracks[index].pan = value;
-			updateDisplay (true);
 		}));
 		p.addValueDisplayObserver (8, "", doIndex (i, function (index, text)
 		{
 			tracks[index].panStr = text;
-			updateDisplay (true);
 		}));
 
 		// Can hold note data?
 		t.getCanHoldNoteData ().addValueObserver (doIndex (i, function (index, canHoldNotes)
 		{
 			tracks[index].canHoldNotes = canHoldNotes;
-			if (push.isActiveView (VIEW_PLAY))
-				push.redrawGrid ();
 		}));
 		
 		// Slot content changes
@@ -367,32 +342,22 @@ function init()
 		cs.addHasContentObserver (doIndex (i, function (index, slot, hasContent)
 		{
 			tracks[index].slots[slot].hasContent = hasContent;
-			if (push.isActiveView (VIEW_SESSION))
-				push.redrawGrid (index, slot);
 		}));
 		cs.addColorObserver (doIndex (i, function (index, slot, red, green, blue)
 		{
 			tracks[index].slots[slot].color = getColorIndex (red, green, blue);
-			if (push.isActiveView (VIEW_SESSION))
-				push.redrawGrid (index, slot);
 		}));
 		cs.addIsPlayingObserver (doIndex (i, function (index, slot, isPlaying)
 		{
 			tracks[index].slots[slot].isPlaying = isPlaying;
-			if (push.isActiveView (VIEW_SESSION))
-				push.redrawGrid (index, slot);
 		}));
 		cs.addIsRecordingObserver (doIndex (i, function (index, slot, isRecording)
 		{
 			tracks[index].slots[slot].isRecording = isRecording;
-			if (push.isActiveView (VIEW_SESSION))
-				push.redrawGrid (index, slot);
 		}));
 		cs.addIsQueuedObserver (doIndex (i, function (index, slot, isQueued)
 		{
 			tracks[index].slots[slot].isQueued = isQueued;
-			if (push.isActiveView (VIEW_SESSION))
-				push.redrawGrid (index, slot);
 		}));
 		
 		// 6 Sends values & texts
@@ -402,12 +367,10 @@ function init()
 			s.addValueObserver (128, doDoubleIndex (i, j, function (index1, index2, value)
 			{
 				tracks[index1].sends[index2].volume = value;
-				updateDisplay (true);
 			}));
 			s.addValueDisplayObserver (8, "", doDoubleIndex (i, j, function (index1, index2, text)
 			{
 				tracks[index1].sends[index2].volumeStr = text;
-				updateDisplay (true);
 			}));
 		}
 	}
@@ -416,12 +379,10 @@ function init()
 	device.addIsEnabledObserver (function (isEnabled)
 	{
 		selectedDevice.enabled = isEnabled;
-		updateDisplay ();
 	});
 	device.addNameObserver (34, 'None', function (name)
 	{
 		selectedDevice.name = name;
-		updateDisplay ();
 	});
 	
 	for (var i = 0; i < 8; i++)
@@ -432,18 +393,15 @@ function init()
 		p.addNameObserver (8, '', doIndex (i, function (index, name)
 		{
 			fxparams[index].name = name;
-			updateDisplay ();
 		}));
 		p.addValueObserver (128, doIndex (i, function (index, value)
 		{
 			fxparams[index].value = value;
-			updateDisplay (true);
 		}));
 		// Parameter value text
 		p.addValueDisplayObserver (8, "",  doIndex (i, function (index, value)
 		{
 			fxparams[index].valueStr = value;
-			updateDisplay (true);
 		}));
 	}
 	
@@ -457,6 +415,12 @@ function init()
 function exit()
 {
 	this.push.turnOff ();
+}
+
+function flush ()
+{
+	updateDisplay ();
+	push.redrawGrid ();
 }
 
 function onMidi (status, data1, data2)
@@ -490,42 +454,35 @@ function updateMode ()
 	output.sendCC (PUSH_BUTTON_PAN_SEND, currentMode >= MODE_PAN && currentMode <= MODE_SEND6 ? BUTTON_ON : BUTTON_OFF);
 }
 
-function updateDisplay (valueChange)
+function updateDisplay ()
 {
 	var t = getSelectedTrack ();
 	
 	switch (currentMode)
 	{
 		case MODE_MASTER:
-			if (!valueChange)
-				push.sendRow (0, PARAM_NAMES_MASTER);
-			
+			push.sendRow (0, PARAM_NAMES_MASTER);
 			push.sendRow (1, 
 				pad (master.volumeStr, 8, ' ') + ' ' +
 				pad (master.panStr, 8, ' ') +
 				pad ('', 17, ' ') +
 				pad ('', 34, ' '));
-		
 			push.sendRow (2, 
 				formatVolume (master.volume, 8) + ' ' +
 				formatPan (master.pan, 8) +
 				pad ('', 17, ' ') +
 				pad ('', 34, ' '));
 			
-			if (!valueChange)
+			push.sendRow (3, pad (master.name, 34, ' ') + pad ('', 34, ' '));
+			for (var i = 0; i < 8; i++)
 			{
-				push.sendRow (3, pad (master.name, 34, ' ') + pad ('', 34, ' '));
-				for (var i = 0; i < 8; i++)
-				{
-					output.sendCC (20 + i, BLACK);
-					output.sendCC (102 + i, BLACK);
-				}
+				output.sendCC (20 + i, BLACK);
+				output.sendCC (102 + i, BLACK);
 			}
 			return;
 	
 		case MODE_TRACK:
-			if (!valueChange)
-				push.sendRow (0, PARAM_NAMES_TRACK);
+			push.sendRow (0, PARAM_NAMES_TRACK);
 			
 			if (t == null)
 			{
@@ -557,8 +514,7 @@ function updateDisplay (valueChange)
 			break;
 
 		case MODE_VOLUME:
-			if (!valueChange)
-				push.sendRow (0, PARAM_NAMES_VOLUME);
+			push.sendRow (0, PARAM_NAMES_VOLUME);
 			var volumeValues = '';
 			var volumeBars = '';
 			for (var i = 0; i < 8; i++)
@@ -573,8 +529,7 @@ function updateDisplay (valueChange)
 			break;
 			
 		case MODE_PAN:
-			if (!valueChange)
-				push.sendRow (0, PARAM_NAMES_PAN);
+			push.sendRow (0, PARAM_NAMES_PAN);
 			var panValues = '';
 			var panBars = '';
 			for (var i = 0; i < 8; i++)
@@ -595,8 +550,7 @@ function updateDisplay (valueChange)
 		case MODE_SEND5:
 		case MODE_SEND6:
 			var sendNo = currentMode - MODE_SEND1;
-			if (!valueChange)
-				push.sendRow (0, PARAM_NAMES_SEND[sendNo]);
+			push.sendRow (0, PARAM_NAMES_SEND[sendNo]);
 			var sendValues = '';
 			var sendBars = '';
 			for (var i = 0; i < 8; i++)
@@ -617,14 +571,12 @@ function updateDisplay (valueChange)
 			for (var i = 0; i < 8; i++)
 			{
 				var isEmpty = fxparams[i].name.length == 0;
-				if (!valueChange)
-					row0 += pad (fxparams[i].name, 8, ' ');
+				row0 += pad (fxparams[i].name, 8, ' ');
 				row1 += pad (isEmpty ? '' : fxparams[i].valueStr, 8, ' ');
 				row2 += isEmpty ? '        ' : formatVolume (fxparams[i].value);
 				if (i % 2 == 0)
 				{
-					if (!valueChange)
-						row0 += ' ';
+					row0 += ' ';
 					row1 += ' ';
 					row2 += ' ';
 				}
@@ -633,12 +585,10 @@ function updateDisplay (valueChange)
 				output.sendCC (20 + i, i == 7 && selectedDevice.enabled ? GREEN_LO - 4 : BLACK);
 				output.sendCC (102 + i, BLACK);
 			}
-			if (!valueChange)
-				push.sendRow (0, row0);
+			push.sendRow (0, row0);
 			push.sendRow (1, row1);
 			push.sendRow (2, row2);
-			if (!valueChange)
-				push.sendRow (3, 'Selected Device: ' + pad (selectedDevice.name, 34, ' ') + '         ' + (selectedDevice.enabled ? 'Enabled ' : 'Disabled'));
+			push.sendRow (3, 'Selected Device: ' + pad (selectedDevice.name, 34, ' ') + '         ' + (selectedDevice.enabled ? 'Enabled ' : 'Disabled'));
 			break;
 			
 		case MODE_SCALES:
@@ -681,7 +631,7 @@ function updateDisplay (valueChange)
 			break;
 	}
 	
-	if (valueChange || currentMode == MODE_DEVICE || currentMode == MODE_SCALES || currentMode == MODE_MASTER)
+	if (currentMode == MODE_DEVICE || currentMode == MODE_SCALES || currentMode == MODE_MASTER)
 		return;
 
 	// Send, Mute, Automation

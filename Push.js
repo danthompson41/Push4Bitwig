@@ -173,7 +173,6 @@ Push.prototype.setActiveView = function (viewId)
 		this.output.sendCC (this.buttons[i], view.usesButton (this.buttons[i]) ? BUTTON_OFF : BLACK);
 	
 	view.onActivate ();
-	view.drawGrid ();
 };
 
 Push.prototype.isActiveView = function (viewId)

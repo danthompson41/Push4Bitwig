@@ -15,10 +15,9 @@ function SequencerView ()
 	this.canScrollUp = true;
 	this.canScrollDown = true;
 	
-	
 	this.offsetX = 0;
 	this.offsetY = START_KEY;
-	this.prevStep = -1;
+	this.step    = -1;
 	
 	this.data = [];
 	for (var y = 0; y < NUM_ROWS; y++)
@@ -28,26 +27,18 @@ function SequencerView ()
 	
 	this.clip.addPlayingStepObserver (doObject (this, function (step)
 	{
-		if (this.push.isActiveView (VIEW_SEQUENCER))
-			this.paintStep (step);
+		this.step = step;
 	}));
 	
 	this.clip.addStepDataObserver (doObject (this, function (column, row, state)
 	{
 		this.data[column][row] = state;
-		if (this.push.isActiveView (VIEW_SEQUENCER))
-			this.drawGrid (column, row);
 	}));
 	
 	this.clip.scrollToKey (START_KEY);
 	this.clip.scrollToStep (0);
 }
 SequencerView.prototype = new BaseView ();
-
-SequencerView.prototype.paintStep = function (step)
-{
-	this.drawStep (step);
-};
 
 SequencerView.prototype.updateNoteMapping = function ()
 {
@@ -131,51 +122,24 @@ SequencerView.prototype.onRight = function ()
 SequencerView.prototype.onUp = function ()
 {
 	this.offsetY = Math.min (NUM_ROWS - NUM_DISPLAY_ROWS, this.offsetY + NUM_DISPLAY_ROWS);
-	this.drawGrid ();
 	this.updateArrows ();
 };
 
 SequencerView.prototype.onDown = function ()
 {
 	this.offsetY = Math.max (0, this.offsetY - NUM_DISPLAY_ROWS);
-	this.drawGrid ();
 	this.updateArrows ();
 };
 
-SequencerView.prototype.drawGrid = function (x, y)
+SequencerView.prototype.drawGrid = function ()
 {
 	var port = host.getMidiOutPort (0);
-
-	if (x && y)
+	var hiStep = this.isInXRange (this.step) ? this.step % NUM_DISPLAY_COLS : -1;
+	for (var x = 0; x < NUM_DISPLAY_COLS; x++)
 	{
-		if (x && this.isInYRange (y))
-			this.drawPad (port, x, y % NUM_DISPLAY_ROWS, this.data[x][y]);
+		for (var y = 0; y < NUM_DISPLAY_ROWS; y++)
+			this.drawPad (port, x, y, this.data[x][this.offsetY + y], x == hiStep);
 	}
-	else
-	{
-		for (var x = 0; x < NUM_DISPLAY_COLS; x++)
-		{
-			for (var y = 0; y < NUM_DISPLAY_ROWS; y++)
-				this.drawPad (port, x, y, this.data[x][this.offsetY + y]);
-		}
-	}
-};
-
-SequencerView.prototype.drawStep = function (step)
-{
-	var drawBar  = this.isInXRange (step);
-	var drawPrev = this.isInXRange (this.prevStep);
-
-	var port = host.getMidiOutPort (0);
-	for (var y = 0; y < NUM_DISPLAY_ROWS; y++)
-	{
-		if (drawPrev)
-			this.drawPad (port, this.prevStep % NUM_DISPLAY_COLS, y, this.data[this.prevStep % NUM_DISPLAY_COLS][this.offsetY + y], false);
-		if (drawBar)
-			this.drawPad (port, step % NUM_DISPLAY_COLS, y, this.data[step % NUM_DISPLAY_COLS][this.offsetY + y], true);
-	}
-	
-	this.prevStep = step;
 };
 
 SequencerView.prototype.drawPad = function (port, x, y, isSet, hilite)
@@ -187,9 +151,4 @@ SequencerView.prototype.drawPad = function (port, x, y, isSet, hilite)
 SequencerView.prototype.isInXRange = function (x)
 {
 	return x >= this.offsetX && x < this.offsetX + NUM_DISPLAY_COLS;
-};
-
-SequencerView.prototype.isInYRange = function (y)
-{
-	return y >= this.offsetY && y < this.offsetY + NUM_DISPLAY_ROWS;
 };

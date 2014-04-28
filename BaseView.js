@@ -225,8 +225,6 @@ BaseView.prototype.onValueKnob = function (index, value)
 					return;
 				currentScale = value <= 61 ? Math.min (currentScale + 1, SCALES.length - 1) : Math.max (currentScale - 1, 0);
 				this.updateNoteMapping ();
-				updateDisplay ();
-				this.drawGrid ();
 			}
 			break;
 	}
@@ -249,14 +247,10 @@ BaseView.prototype.onFirstRow = function (index)
 	
 		case MODE_SCALES:
 			if (index == 0)
-			{
 				currentScale = Math.max (currentScale - 1, 0);
-				this.drawGrid ();
-			}
 			else if (index > 0 && index < 7)
 				currentScaleOffset = index - 1;
 			this.updateNoteMapping ();
-			updateDisplay ();
 			break;
 
 		case MODE_MASTER:
@@ -275,14 +269,10 @@ BaseView.prototype.onSecondRow = function (index)
 	if (currentMode == MODE_SCALES)
 	{
 		if (index == 0)
-		{
 			currentScale = Math.min (currentScale + 1, SCALES.length - 1);
-			this.drawGrid ();
-		}
 		else if (index != 7)
 			currentScaleOffset = index + 5;
 		this.updateNoteMapping ();
-		updateDisplay ();
 	}
 	else if (currentMode != MODE_DEVICE && currentMode != MODE_MASTER)
 	{
@@ -305,7 +295,6 @@ BaseView.prototype.onVolume = function ()
 {
 	currentMode = MODE_VOLUME;
 	updateMode ();
-	updateDisplay ();
 };
 
 BaseView.prototype.onPanAndSend = function ()
@@ -314,21 +303,18 @@ BaseView.prototype.onPanAndSend = function ()
 	if (currentMode < MODE_PAN || currentMode > MODE_SEND6)
 		currentMode = MODE_PAN;
 	updateMode ();
-	updateDisplay ();
 };
 
 BaseView.prototype.onTrack = function ()
 {
 	currentMode = MODE_TRACK;
 	updateMode ();
-	updateDisplay ();
 };
 
 BaseView.prototype.onDevice = function ()
 {
 	currentMode = MODE_DEVICE;
 	updateMode ();
-	updateDisplay ();
 };
 
 BaseView.prototype.onBrowse = function ()
@@ -361,7 +347,7 @@ BaseView.prototype.onMute = function ()
 		return;
 	selectedTrack.mute = toggleValue (selectedTrack.mute);
 	trackBank.getTrack (selectedTrack.index).getMute ().set (selectedTrack.mute);
-	sendCC (60, selectedTrack.mute ? BUTTON_ON : BUTTON_OFF);
+	output.sendCC (60, selectedTrack.mute ? BUTTON_ON : BUTTON_OFF);
 };
 
 BaseView.prototype.onSolo = function ()
@@ -371,7 +357,7 @@ BaseView.prototype.onSolo = function ()
 		return;
 	selectedTrack.solo = toggleValue (selectedTrack.solo);
 	trackBank.getTrack (selectedTrack.index).getSolo ().set (selectedTrack.solo);
-	sendCC (61, selectedTrack.solo ? BUTTON_ON : BUTTON_OFF);
+	output.sendCC (61, selectedTrack.solo ? BUTTON_ON : BUTTON_OFF);
 };
 
 BaseView.prototype.onScales = function (isDown)
@@ -387,23 +373,18 @@ BaseView.prototype.onScales = function (isDown)
 		previousMode = null;
 	}
 	updateMode ();
-	updateDisplay ();
 };
 
 BaseView.prototype.onOctaveDown = function ()
 {
 	currentOctave = Math.max (-3, currentOctave - 1);
 	this.updateNoteMapping ();
-	if (currentMode == MODE_SCALES)
-		updateDisplay ();
 };
 
 BaseView.prototype.onOctaveUp = function ()
 {
 	currentOctave = Math.min (3, currentOctave + 1);
 	this.updateNoteMapping ();
-	if (currentMode == MODE_SCALES)
-		updateDisplay ();
 };
 
 BaseView.prototype.onAddFX = function ()
@@ -429,9 +410,4 @@ BaseView.prototype.onNote = function ()
 BaseView.prototype.onSession = function ()
 {
 	this.push.setActiveView (VIEW_SESSION);
-};
-
-BaseView.prototype.onShift = function (isShiftPressed)
-{
-	updateDisplay ();
 };
