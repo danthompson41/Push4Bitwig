@@ -139,27 +139,28 @@ host.defineMidiPorts (1, 1);
 host.addDeviceNameBasedDiscoveryPair (["MIDIIN2 (Ableton Push)"], ["MIDIOUT2 (Ableton Push)"]);
 host.addDeviceNameBasedDiscoveryPair (["Ableton Push MIDI 2"], ["Ableton Push MIDI 2"]);
 
-
 function init()
 {
-	output = new MidiOutput ();
-	push = new Push (output);
-	playView = new PlayView ();
-	sessionView = new SessionView ();
-	sequencerView = new SequencerView ();
-	push.addView (VIEW_PLAY, playView);
-	push.addView (VIEW_SESSION, sessionView);
-	push.addView (VIEW_SEQUENCER, sequencerView);
-
 	var port = host.getMidiInPort(0);
 	port.setMidiCallback (onMidi);
-	noteInput = host.getMidiInPort (0).createNoteInput ("Ableton Push", "80????", "90????", "E0????");
+	noteInput = port.createNoteInput ("Ableton Push", "80????", "90????", "E0????");
 	noteInput.setShouldConsumeEvents (false);
+	
 	application = host.createApplication ();
 	device = host.createCursorDevice();
 	transport = host.createTransport ();
 	masterTrack = host.createMasterTrack (0);
 	trackBank = host.createMainTrackBankSection (8, 6, 8);
+
+	output = new MidiOutput ();
+	push = new Push (output);
+	playView = new PlayView ();
+//	sessionView = new SessionView ();
+//	sequencerView = new SequencerView ();
+	push.addView (VIEW_PLAY, playView);
+//	push.addView (VIEW_SESSION, sessionView);
+//	push.addView (VIEW_SEQUENCER, sequencerView);
+
 	
 	// Click
 	transport.addClickObserver (function (isOn)
@@ -233,32 +234,6 @@ function init()
 	p.addValueDisplayObserver (8, "", function (text)
 	{
 		master.panStr = text;
-	});
-	
-	
-	trackBank.addCanScrollScenesDownObserver (function (canScroll)
-	{
-		sessionView.canScrollUp = canScroll;
-		if (push.isActiveView (VIEW_SESSION))
-			sessionView.updateArrows ();
-	});
-	trackBank.addCanScrollScenesUpObserver (function (canScroll)
-	{
-		sessionView.canScrollDown = canScroll;
-		if (push.isActiveView (VIEW_SESSION))
-			sessionView.updateArrows ();
-	});
-	trackBank.addCanScrollTracksDownObserver (function (canScroll)
-	{
-		sessionView.canScrollRight = canScroll;
-		if (push.isActiveView (VIEW_SESSION))
-			sessionView.updateArrows ();
-	});
-	trackBank.addCanScrollTracksUpObserver (function (canScroll)
-	{
-		sessionView.canScrollLeft = canScroll;
-		if (push.isActiveView (VIEW_SESSION))
-			sessionView.updateArrows ();
 	});
 	
 	for (var i = 0; i < 8; i++)
@@ -405,9 +380,8 @@ function init()
 		}));
 	}
 	
-	playView.onNote ();
-	
 	updateMode ();
+	push.setActiveView (VIEW_PLAY);
 	
 	println ("Initialized.");
 }

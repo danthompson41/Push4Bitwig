@@ -8,6 +8,31 @@ function SessionView ()
 	this.canScrollRight = true;
 	this.canScrollUp = true;
 	this.canScrollDown = true;
+	
+	trackBank.addCanScrollScenesDownObserver (doObject (this, function (canScroll)
+	{
+		this.canScrollUp = canScroll;
+		if (push.isActiveView (VIEW_SESSION))
+			this.updateArrows ();
+	}));
+	trackBank.addCanScrollScenesUpObserver (doObject (this, function (canScroll)
+	{
+		this.canScrollDown = canScroll;
+		if (push.isActiveView (VIEW_SESSION))
+			this.updateArrows ();
+	}));
+	trackBank.addCanScrollTracksDownObserver (doObject (this, function (canScroll)
+	{
+		this.canScrollRight = canScroll;
+		if (push.isActiveView (VIEW_SESSION))
+			this.updateArrows ();
+	}));
+	trackBank.addCanScrollTracksUpObserver (doObject (this, function (canScroll)
+	{
+		this.canScrollLeft = canScroll;
+		if (push.isActiveView (VIEW_SESSION))
+			this.updateArrows ();
+	}));
 }
 SessionView.prototype = new BaseView ();
 
