@@ -4,6 +4,15 @@
 
 function BaseView ()
 {
+	this.canScrollLeft = true;
+	this.canScrollRight = true;
+	this.canScrollUp = true;
+	this.canScrollDown = true;
+
+	this.stopPressed = false;
+	this.newPressed = false;
+	this.newClipLength = 4;
+	
 	this.ttLastMillis = -1;
 	this.ttLastBPM = -1;
 	this.ttHistory = [];
@@ -11,12 +20,23 @@ function BaseView ()
 BaseView.prototype = new View ();
 BaseView.prototype.constructor = BaseView;
 
-BaseView.prototype.updateNoteMapping = function () {};
-
-BaseView.prototype.onNew = function ()
+BaseView.prototype.onActivate = function ()
 {
-	// TODO
-	host.showPopupNotification ("New: Function not supported (yet).");
+	this.updateNoteMapping ();
+	this.updateArrows ();
+};
+
+BaseView.prototype.updateNoteMapping = function ()
+{
+	noteInput.setKeyTranslationTable (initArray (-1, 128));
+};
+
+BaseView.prototype.updateArrows = function ()
+{
+	push.setButton (PUSH_BUTTON_LEFT, this.canScrollLeft ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_OFF);
+	push.setButton (PUSH_BUTTON_RIGHT, this.canScrollRight ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_OFF);
+	push.setButton (PUSH_BUTTON_UP, this.canScrollUp ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_OFF);
+	push.setButton (PUSH_BUTTON_DOWN, this.canScrollDown ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_OFF);
 };
 
 BaseView.prototype.onPlay = function ()
@@ -29,7 +49,21 @@ BaseView.prototype.onPlay = function ()
 
 BaseView.prototype.onRecord = function ()
 {
-	transport.record ();
+	if (this.push.isShiftPressed ())
+		transport.toggleLauncherOverdub ();
+	else
+		transport.record ();
+};
+
+BaseView.prototype.onStop = function (isPressed)
+{
+	if (this.push.isShiftPressed ())
+	{
+		trackBank.getClipLauncherScenes ().stop ();
+		return;
+	}
+	this.stopPressed = isPressed;
+	push.setButton (PUSH_BUTTON_STOP, isPressed ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
 };
 
 BaseView.prototype.onDuplicate = function ()
@@ -82,6 +116,11 @@ BaseView.prototype.onSmallKnob1 = function (increase)
 {
 	tempo = increase ? Math.min (tempo + 1, TEMPO_RESOLUTION) : Math.max (0, tempo - 1);
 	transport.getTempo ().set (tempo, TEMPO_RESOLUTION);
+};
+
+BaseView.prototype.onSmallKnob1Touch = function (isTouched)
+{
+	transport.getTempo ().setIndication (isTouched);
 };
 
 // Change time (play position)
@@ -230,10 +269,89 @@ BaseView.prototype.onValueKnob = function (index, value)
 	}
 };
 
+BaseView.prototype.onValueKnobTouch = function (index, isTouched)
+{
+	switch (currentMode)
+	{
+		case MODE_MASTER:
+			if (index == 0)
+			{
+				// Volume
+				masterTrack.getVolume ().setIndication (isTouched);
+			}
+			else if (index == 1)
+			{
+				// Pan
+				masterTrack.getPan ().setIndication (isTouched);
+			}
+			break;
+	
+		case MODE_TRACK:
+			var selectedTrack = getSelectedTrack ();
+			if (selectedTrack == null)
+				return;
+				
+			var t = trackBank.getTrack (selectedTrack.index);
+			if (index == 0)
+			{
+				// Volume
+				t.getVolume ().setIndication (isTouched);
+			}
+			else if (index == 1)
+			{
+				// Pan
+				t.getPan ().setIndication (isTouched);
+			}
+			else
+			{
+				// Send 1-6 Volume
+				var sel = index - 2;
+				var send = selectedTrack.sends[sel];
+				t.getSend (send.index).setIndication (isTouched);
+			}
+			break;
+		
+		case MODE_VOLUME:
+			var t = tracks[index];
+			trackBank.getTrack (t.index).getVolume ().setIndication (isTouched);
+			break;
+			
+		case MODE_PAN:
+			var t = tracks[index];
+			trackBank.getTrack (t.index).getPan ().setIndication (isTouched);
+			break;
+			
+		case MODE_SEND1:
+		case MODE_SEND2:
+		case MODE_SEND3:
+		case MODE_SEND4:
+		case MODE_SEND5:
+		case MODE_SEND6:
+			var sendNo = currentMode - MODE_SEND1;
+			var t = tracks[index];
+			var send = t.sends[sendNo];
+			trackBank.getTrack (t.index).getSend (sendNo).setIndication (isTouched);
+			break;
+		
+		case MODE_DEVICE:
+			device.getParameter (index).setIndication (isTouched);
+			break;
+			
+		case MODE_SCALES:
+			// Not used
+			break;
+	}
+};
+
 // Master Volume
 BaseView.prototype.onValueKnob9 = function (value)
 {
 	masterTrack.getVolume ().inc (value <= 61 ? 1 : -1, 128);
+};
+
+BaseView.prototype.onValueKnob9Touch = function (isTouched)
+{
+	masterTrack.getVolume ().setIndication (isTouched);
 };
 
 BaseView.prototype.onFirstRow = function (index)
@@ -258,7 +376,10 @@ BaseView.prototype.onFirstRow = function (index)
 			break;
 			
 		default:
-			trackBank.getTrack (index).select ();
+			if (this.stopPressed)
+				trackBank.getTrack (index).stop ();
+			else
+				trackBank.getTrack (index).select ();
 			break;
 	}
 };
@@ -347,7 +468,7 @@ BaseView.prototype.onMute = function ()
 		return;
 	selectedTrack.mute = toggleValue (selectedTrack.mute);
 	trackBank.getTrack (selectedTrack.index).getMute ().set (selectedTrack.mute);
-	output.sendCC (60, selectedTrack.mute ? BUTTON_ON : BUTTON_OFF);
+	push.setButton (PUSH_BUTTON_MUTE, selectedTrack.mute ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
 };
 
 BaseView.prototype.onSolo = function ()
@@ -357,7 +478,7 @@ BaseView.prototype.onSolo = function ()
 		return;
 	selectedTrack.solo = toggleValue (selectedTrack.solo);
 	trackBank.getTrack (selectedTrack.index).getSolo ().set (selectedTrack.solo);
-	output.sendCC (61, selectedTrack.solo ? BUTTON_ON : BUTTON_OFF);
+	push.setButton (PUSH_BUTTON_SOLO, selectedTrack.solo ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
 };
 
 BaseView.prototype.onScales = function (isDown)
@@ -398,9 +519,17 @@ BaseView.prototype.onAddTrack = function ()
 	// TODO Not possible?
 	host.showPopupNotification ("Add Track: Function not supported (yet).");
 };
-
+BaseView.prototype.onRepeat = function ()
+{
+	this.push.setActiveView (VIEW_PLAY_DRUMS);
+}
 BaseView.prototype.onNote = function ()
 {
+	//channel selectedTrack = getSelectedTrack ();
+	//PrimaryDevice primaryDevice = selectedTrack.getPrimaryDevice ();
+	//var set = PrimaryDevice.DeviceType;
+	//if (PrimaryDevice.DeviceType[] == 'DrumMachine')
+	//	this.push.setActiveView (VIEW_PLAY_DRUMS)
 	if (this.push.isActiveView (VIEW_PLAY))
 		this.push.setActiveView (VIEW_SEQUENCER);
 	else
