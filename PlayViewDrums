@@ -1,0 +1,228 @@
+// Written by Dan Thompson
+// (c) 2014
+
+function PlayViewDrums ()
+{
+	this.pressedKeys = initArray (0, 128);
+}
+PlayViewDrums.prototype = new BaseView ();
+
+PlayViewDrums.prototype.updateNoteMapping = function ()
+{
+	var noteMap = initArray (-1, 128);
+	
+	var t = getSelectedTrack ();
+	if (t != null && t.canHoldNotes)
+	{
+		var matrix = SCALES[14].matrix;
+		for (var note = 36; note < 100; note++)
+		{
+			var n = (matrix[note - 36] + SCALE_OFFSETS[currentScaleOffset] + 36 + currentOctave * 16);
+			noteMap[note] = n < 0 || n > 127 ? -1 : n;
+		}
+	}
+	// Workaround by teotigraphix for
+	// https://github.com/git-moss/Push4Bitwig/issues/7
+	host.scheduleTask (function () { noteInput.setKeyTranslationTable (noteMap); }, null, 100);
+};
+
+PlayViewDrums.prototype.onActivate = function ()
+{
+	BaseView.prototype.onActivate.call (this);
+
+	push.setButton (PUSH_BUTTON_NOTE, PUSH_BUTTON_STATE_ON);
+	push.setButton (PUSH_BUTTON_SESSION, PUSH_BUTTON_STATE_HI);
+	for (var i = 0; i < 8; i++)
+		trackBank.getTrack (i).getClipLauncherSlots ().setIndication (false);
+	for (var i = PUSH_BUTTON_SCENE1; i <= PUSH_BUTTON_SCENE8; i++)
+		push.setButton (i, PUSH_COLOR_BLACK);
+	updateMode ();
+};
+
+PlayViewDrums.prototype.usesButton = function (buttonID)
+{
+	switch (buttonID)
+	{
+		case PUSH_BUTTON_NEW:
+		case PUSH_BUTTON_SELECT:
+		case PUSH_BUTTON_ADD_EFFECT:
+		case PUSH_BUTTON_ADD_TRACK:
+		case PUSH_BUTTON_REPEAT:
+		case PUSH_BUTTON_ACCENT:
+		case PUSH_BUTTON_USER_MODE:
+		case PUSH_BUTTON_DUPLICATE:
+		case PUSH_BUTTON_FIXED_LENGTH:
+		case PUSH_BUTTON_CLIP:
+			return false;
+	}
+	return true;
+};
+
+PlayViewDrums.prototype.drawGrid = function ()
+{
+	var t = getSelectedTrack ();
+	var isKeyboardEnabled = t != null && t.canHoldNotes;
+	for (var i = 36; i < 100; i++)
+		push.pads.light (i, isKeyboardEnabled ? (this.pressedKeys[i] > 0 ? PUSH_COLOR_GREEN_HI : this.getScaleColor (i)) : PUSH_COLOR_BLACK);
+};
+
+PlayViewDrums.prototype.getScaleColor = function (note)
+{
+		return SCALE_DRUM[note - 36];
+	//return currentScale == SCALE_CHROMATIC ? 
+	//	SCALE_CHROMATIC_COLORS[note - 36] :
+	//	SCALES[currentScale].matrix[note - 36] % 12 == 0 ? PUSH_COLOR_BLUE_LGHT : PUSH_COLOR_WHITE_HI;
+};
+
+PlayViewDrums.prototype.onUp = function ()
+{
+	if (this.push.isShiftPressed ())
+		application.arrowKeyLeft ();
+	else
+		application.arrowKeyUp ();
+};
+
+PlayViewDrums.prototype.onDown = function ()
+{
+	if (this.push.isShiftPressed ())
+		application.arrowKeyRight ();
+	else
+		application.arrowKeyDown ();
+};
+
+PlayViewDrums.prototype.onGrid = function (note, velocity)
+{
+	var t = getSelectedTrack ();
+	if (t == null || !t.canHoldNotes)
+		return;
+
+	// Remember pressed pads
+	this.pressedKeys[note] = velocity;
+	var index = note - 36;
+	if (index % 2 < 1)
+	{
+		if (index < 8)
+		{
+			this.pressedKeys[Math.min (note + 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 8, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 9, 127)] = velocity;
+		}
+		if (7<index && index<16)
+		{
+			this.pressedKeys[Math.min (note + 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 8, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 7, 127)] = velocity;
+		}
+		if (15<index && index<24)
+		{
+			this.pressedKeys[Math.min (note + 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 8, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 9, 127)] = velocity;
+		}
+		if (23<index && index<32)
+		{
+			this.pressedKeys[Math.min (note + 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 8, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 7, 127)] = velocity;
+		}
+		if (31<index && index<40)
+		{
+			this.pressedKeys[Math.min (note + 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 8, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 9, 127)] = velocity;
+		}
+		if (39<index && index<48)
+		{
+			this.pressedKeys[Math.min (note + 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 8, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 7, 127)] = velocity;
+		}
+		if (47<index && index<56)
+		{
+			this.pressedKeys[Math.min (note + 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 8, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 9, 127)] = velocity;
+		}
+		if (55<index && index<64)
+		{
+			this.pressedKeys[Math.min (note + 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 8, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 7, 127)] = velocity;
+		}
+	}
+	if ((index+1) % 2 < 1)
+	{
+		if (index < 8)
+		{
+			this.pressedKeys[Math.min (note - 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 7, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 8, 127)] = velocity;
+		}
+		if (7<index && index<16)
+		{
+			this.pressedKeys[Math.min (note - 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 9, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 8, 127)] = velocity;
+		}		
+		if (15<index && index<24)
+		{
+			this.pressedKeys[Math.min (note - 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 7, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 8, 127)] = velocity;
+		}
+		if (23<index && index<32)
+		{
+			this.pressedKeys[Math.min (note - 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 9, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 8, 127)] = velocity;
+		}		
+		if (31<index && index<40)
+		{
+			this.pressedKeys[Math.min (note - 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 7, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 8, 127)] = velocity;
+		}
+		if (39<index && index<48)
+		{
+			this.pressedKeys[Math.min (note - 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 9, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 8, 127)] = velocity;
+		}		
+		if (47<index && index<56)
+		{
+			this.pressedKeys[Math.min (note - 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 7, 127)] = velocity;
+			this.pressedKeys[Math.min (note + 8, 127)] = velocity;
+		}
+		if (55<index && index<64)
+		{
+			this.pressedKeys[Math.min (note - 1, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 9, 127)] = velocity;
+			this.pressedKeys[Math.min (note - 8, 127)] = velocity;
+		}		
+	}
+};
+
+PlayViewDrums.prototype.onLeft = function ()
+{
+	if (currentMode == MODE_DEVICE)
+		device.selectPrevious ();
+	else
+	{
+		var sel = getSelectedTrack ();
+		trackBank.getTrack (sel == null ? 0 : Math.max (0, sel.index - 1)).select ();
+	}
+};
+
+PlayViewDrums.prototype.onRight = function ()
+{
+	if (currentMode == MODE_DEVICE)
+		device.selectNext ();
+	else
+	{
+		var sel = getSelectedTrack ();
+		var t = trackBank.getTrack (sel == null ? 0 : Math.min (8, sel.index + 1));
+		ifchrom (t != null)
+			t.select ();
+	}
+};
