@@ -16,6 +16,7 @@ var SCALE_CHROMATIC_COLORS =
 	PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLUE_LGHT, PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    ,
 ];
 
+
 var SCALE_DRUM_COLORS =
 [
 	PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK ,
@@ -28,180 +29,14 @@ var SCALE_DRUM_COLORS =
 	PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI
 ];
 
-var SCALE_DRUM_4_COLORS =
-[
-	PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    ,
-	PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    ,
-	PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    ,
-	PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    ,
-	PUSH_COLOR_ORANGE_LO, PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , 
-	PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI ,
-	PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI ,
-	PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_BLACK    , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI , PUSH_COLOR_WHITE_HI ,
-];
-
-
 var NOTE_NAMES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B' ];
 
 //                    C  G  D  A  E   H  F  Bb  Eb Ab Db Gb
 var SCALE_OFFSETS = [ 0, 7, 2, 9, 4, 11, 5, 10, 3, 8, 1, 6 ];
 var SCALE_BASES = [ 'C', 'G', 'D', 'A', 'E', 'B', 'F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb' ];
 
-var SCALE_MAJOR_NOTES =
-[
-	00, 02, 04, 05, 07, 09, 11, 12,
-	05, 07, 09, 11, 12, 14, 16, 17,
-	11, 12, 14, 16, 17, 19, 21, 23,
-	16, 17, 19, 21, 23, 24, 26, 28,
-	21, 23, 24, 26, 28, 29, 31, 33,
-	26, 28, 29, 31, 33, 35, 36, 38,
-	31, 33, 35, 36, 38, 40, 41, 43,
-	36, 38, 40, 41, 43, 45, 47, 48
-];
-
-var SCALE_MINOR_NOTES =
-[
-	00, 02, 03, 05, 07, 08, 10, 12,
-	05, 07, 08, 10, 12, 14, 15, 17,
-	10, 12, 14, 15, 17, 19, 20, 22,
-	15, 17, 19, 20, 22, 24, 26, 27,
-	20, 22, 24, 26, 27, 29, 31, 32,
-	26, 27, 29, 31, 32, 34, 36, 38,
-	31, 32, 34, 36, 38, 39, 41, 43,
-	36, 38, 39, 41, 43, 44, 46, 48
-];
-
-var SCALE_PHRYGIAN_NOTES =
-[
-	00, 01, 03, 05, 07, 08, 10, 12,
-	05, 07, 08, 10, 12, 13, 15, 17,
-	10, 12, 13, 15, 17, 19, 20, 22,
-	15, 17, 19, 20, 22, 24, 25, 27,
-	20, 22, 24, 25, 27, 29, 31, 32,
-	25, 27, 29, 31, 32, 34, 36, 37,
-	31, 32, 34, 36, 37, 39, 41, 43,
-	36, 37, 39, 41, 43, 44, 46, 48
-];
-
-var SCALE_MIXOLYDIAN_NOTES =
-[
-	00, 02, 04, 05, 07, 09, 10, 12,
-	05, 07, 09, 10, 12, 14, 16, 17,
-	10, 12, 14, 16, 17, 19, 21, 22,
-	16, 17, 19, 21, 22, 24, 26, 28,
-	21, 22, 24, 26, 28, 29, 31, 33,
-	26, 28, 29, 31, 33, 34, 36, 38,
-	31, 33, 34, 36, 38, 40, 41, 43,
-	36, 38, 40, 41, 43, 45, 46, 48
-];
-
-var SCALE_DORIAN_NOTES =
-[
-	00, 02, 03, 05, 07, 09, 10, 12,
-	05, 07, 09, 10, 12, 14, 15, 17,
-	10, 12, 14, 15, 17, 19, 21, 22,
-	15, 17, 19, 21, 22, 24, 26, 27,
-	21, 22, 24, 26, 27, 29, 31, 33,
-	26, 27, 29, 31, 33, 34, 36, 38,
-	31, 33, 34, 36, 38, 39, 41, 43,
-	36, 38, 39, 41, 43, 45, 46, 48
-];
-
-var SCALE_LYDIAN_NOTES =
-[
-	00, 02, 04, 06, 07, 09, 11, 12,
-	06, 07, 09, 11, 12, 14, 16, 18,
-	11, 12, 14, 16, 18, 19, 21, 23,
-	16, 18, 19, 21, 23, 24, 26, 28,
-	21, 23, 24, 26, 28, 30, 31, 33,
-	26, 28, 30, 31, 33, 35, 36, 38,
-	31, 33, 35, 36, 38, 40, 42, 43,
-	36, 38, 40, 42, 43, 45, 47, 48
-];
-
-var SCALE_LOCRIAN_NOTES =
-[
-	00, 01, 03, 04, 06, 08, 10, 12,
-	04, 06, 08, 10, 12, 13, 15, 16,
-	10, 12, 13, 15, 16, 18, 20, 22,
-	15, 16, 18, 20, 22, 24, 25, 27,
-	20, 22, 24, 25, 27, 28, 30, 32,
-	25, 27, 28, 30, 32, 34, 36, 37,
-	30, 32, 34, 36, 37, 39, 40, 42,
-	36, 37, 39, 40, 42, 44, 46, 48
-];
-
-var SCALE_MINOR_GYPSY_NOTES =
-[
-	00, 01, 04, 05, 07, 08, 10, 12,
-	05, 07, 08, 10, 12, 13, 16, 17,
-	10, 12, 13, 16, 17, 19, 20, 22,
-	16, 17, 19, 20, 22, 24, 25, 28,
-	20, 22, 24, 25, 28, 29, 31, 32,
-	25, 28, 29, 31, 32, 34, 36, 37,
-	31, 32, 34, 36, 37, 40, 41, 43,
-	36, 37, 40, 41, 43, 44, 46, 48
-];
-
-var SCALE_HUNGARIAN_MINOR_NOTES =
-[
-	00, 02, 03, 06, 07, 08, 11, 12,
-	06, 07, 08, 11, 12, 14, 15, 18,
-	11, 12, 14, 15, 18, 19, 20, 23,
-	15, 18, 19, 20, 23, 24, 26, 27,
-	20, 23, 24, 26, 27, 30, 31, 32,
-	26, 27, 30, 31, 32, 35, 36, 38,
-	31, 32, 35, 36, 38, 39, 42, 43,
-	36, 38, 39, 42, 43, 44, 47, 48
-];
-
-var SCALE_BHAIRAV_NOTES =
-[
-	00, 01, 04, 05, 07, 08, 11, 12,
-	05, 07, 08, 11, 12, 13, 16, 17,
-	11, 12, 13, 16, 17, 19, 20, 23,
-	16, 17, 19, 20, 23, 24, 25, 28,
-	20, 23, 24, 25, 28, 29, 31, 32,
-	25, 28, 29, 31, 32, 35, 36, 37,
-	31, 32, 35, 36, 37, 40, 41, 43,
-	36, 37, 40, 41, 43, 44, 47, 48
-];
-
-var SCALE_SUPER_LOCRIAN_NOTES =
-[
-	00, 01, 03, 04, 06, 08, 10, 12,
-	04, 06, 08, 10, 12, 13, 15, 16,
-	10, 12, 13, 15, 16, 18, 20, 22,
-	15, 16, 18, 20, 22, 24, 25, 27,
-	20, 22, 24, 25, 27, 28, 30, 32,
-	25, 27, 28, 30, 32, 34, 36, 37,
-	30, 32, 34, 36, 37, 39, 40, 42,
-	36, 37, 39, 40, 42, 44, 46, 48
-];
-
-var SCALE_MELODIC_MINOR_NOTES =
-[
-	00, 02, 03, 05, 07, 09, 11, 12,
-	05, 07, 09, 11, 12, 14, 15, 17,
-	11, 12, 14, 15, 17, 19, 21, 23,
-	15, 17, 19, 21, 23, 24, 26, 27,
-	21, 23, 24, 26, 27, 29, 31, 33,
-	26, 27, 29, 31, 33, 35, 36, 38,
-	31, 33, 35, 36, 38, 39, 41, 43,
-	36, 38, 39, 41, 43, 45, 47, 48
-];
-
-var SCALE_HARMONIC_MINOR_NOTES =
-[
-	00, 02, 03, 05, 07, 08, 11, 12,
-	05, 07, 08, 11, 12, 14, 15, 17,
-	11, 12, 14, 15, 17, 19, 20, 23,
-	15, 17, 19, 20, 23, 24, 26, 27,
-	20, 23, 24, 26, 27, 29, 31, 32,
-	26, 27, 29, 31, 32, 35, 36, 38,
-	31, 32, 35, 36, 38, 39, 41, 43,
-	36, 38, 39, 41, 43, 44, 47, 48
-];
+//Scales
+var SCALE_CHROMATIC = 0;
 
 var SCALE_CHROMATIC_NOTES =
 [
@@ -227,48 +62,70 @@ var SCALE_DRUM =
 	12, 12, 13, 13, 14, 14, 15, 15
 ];
 
-var SCALE_DRUM_4 =
-[
-	00, 01, 02, 03, 32, 33, 34, 35,
-	04, 05, 06, 07, 36, 37, 38, 39,
-	08, 09, 10, 11, 40, 41, 42, 43,
-	12, 13, 14, 15, 44, 45, 46, 47,
-	16, 17, 18, 19, 48, 49, 50, 51,
-	20, 21, 22, 23, 52, 53, 54, 55,
-	24, 25, 26, 27, 56, 57, 58, 59,
-	28, 29, 30, 60, 61, 62, 63, 64
+var scaleIntervals = [
+	{ name: 'Major', notes: [0, 2, 4, 5, 7, 9, 11] },
+	{ name: 'Minor', notes: [0, 2, 3, 5, 7, 8, 10] },
+	{ name: 'Dorian', notes: [0, 2, 3, 5, 7, 9, 10] },
+	{ name: 'Mixolydian', notes: [0, 2, 4, 5, 7, 9, 10] },
+	{ name: 'Lydian', notes: [0, 2, 4, 6, 7, 9, 11] },
+	{ name: 'Phrygian', notes: [0, 1, 3, 5, 7, 8, 10] },
+	{ name: 'Locrian', notes: [0, 1, 3, 4, 6, 8, 10] },
+	// { name: 'Diminished', notes:  },
+	// { name: 'Whole-half', notes:  },
+	// { name: 'Whole Tone', notes:  },
+	// { name: 'Minor Blues', notes:  },
+	// { name: 'Minor Pentatonic', notes:  },
+	// { name: 'Major Pentatonic', notes:  },
+	{ name: 'Harmonic Minor', notes: [0, 2, 3, 5, 7, 8, 11] },
+	{ name: 'Melodic Minor', notes: [0, 2, 3, 5, 7, 9, 11] },
+	{ name: 'Super Locrian', notes: [0, 1, 3, 4, 6, 8, 10] },
+	{ name: 'Bhairav', notes: [0, 1, 4, 5, 7, 8, 11] },
+	{ name: 'Hungarian Minor', notes: [0, 2, 3, 6, 7, 8, 11] },
+	{ name: 'Minor Gypsy', notes: [0, 1, 4, 5, 7, 8, 10] }//,
+	// { name: 'Hirojoshi', notes:  },
+	// { name: 'In-Sen', notes:  },
+	// { name: 'Iwato', notes:  },
+	// { name: 'Kumoi', notes:  },
+	// { name: 'Pelog', notes:  },
+	// { name: 'Spanish', notes:  }
+	
 ];
 
-// Scales
-var SCALE_CHROMATIC = 0;
+function Scales()
+{
+}
 
-var SCALES =
-[
-	{ name: 'Chromatic', matrix: SCALE_CHROMATIC_NOTES },
-	{ name: 'Major', matrix: SCALE_MAJOR_NOTES },
-	{ name: 'Minor', matrix: SCALE_MINOR_NOTES },
-	{ name: 'Dorian', matrix: SCALE_DORIAN_NOTES },
-	{ name: 'Mixolydian', matrix: SCALE_MIXOLYDIAN_NOTES },
-	{ name: 'Lydian', matrix: SCALE_LYDIAN_NOTES },
-	{ name: 'Phrygian', matrix: SCALE_PHRYGIAN_NOTES },
-	{ name: 'Locrian', matrix: SCALE_LOCRIAN_NOTES },
-	// { name: 'Diminished', matrix: SCALE_ },
-	// { name: 'Whole-half', matrix: SCALE_ },
-	// { name: 'Whole Tone', matrix: SCALE_ },
-	// { name: 'Minor Blues', matrix: SCALE_ },
-	// { name: 'Minor Pentatonic', matrix: SCALE_ },
-	// { name: 'Major Pentatonic', matrix: SCALE_ },
-	{ name: 'Harmonic Minor', matrix: SCALE_HARMONIC_MINOR_NOTES },
-	{ name: 'Melodic Minor', matrix: SCALE_MELODIC_MINOR_NOTES },
-	{ name: 'Super Locrian', matrix: SCALE_SUPER_LOCRIAN_NOTES },
-	{ name: 'Bhairav', matrix: SCALE_BHAIRAV_NOTES },
-	{ name: 'Hungarian Minor', matrix: SCALE_HUNGARIAN_MINOR_NOTES },
-	{ name: 'Minor Gypsy', matrix: SCALE_MINOR_GYPSY_NOTES },
-	{ name: 'Drum', matrix: SCALE_DRUM }	
-	// { name: 'Hirojoshi', matrix: SCALE_ },
-	// { name: 'In-Sen', matrix: SCALE_ },
-	// { name: 'Iwato', matrix: SCALE_ },
-	// { name: 'Kumoi', matrix: SCALE_ },
-	// { name: 'Pelog', matrix: SCALE_ },
-	// { name: 'Spanish', matrix: SCALE_ }
+// TODO eventually refactor all scales and constants into Scales class
+var SCALES = [
+    {name: 'Chromatic', matrix: SCALE_CHROMATIC_NOTES},
 ];
+
+Scales.createScales = function()
+{
+	for (var i = 0; i < scaleIntervals.length; i++)
+		Scales.createScale(scaleIntervals[i]);
+};
+
+Scales.createScale = function(scale)
+{
+	var len = scale.notes.length;
+	var matrix = [];
+	for (var row = 0; row < 8; row++)
+	{
+		for (var column = 0; column < 8; column++)
+		{
+			var offset = row * 3 + column;
+			matrix.push((Math.floor(offset / len)) * 12 + scale.notes[offset % len]);			
+		}
+	}
+	SCALES.push({name:scale.name, matrix:matrix});
+};
+var DRUM = [
+    {name: 'Drums', matrix: SCALE_DRUM},
+]
+
+//for (var i = 0; i < scaleIntervals.length; i++) {
+//	println("----------------------------------");
+//	println(SCALES[i].name);
+//	println(SCALES[i].matrix);
+//}

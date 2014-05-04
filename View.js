@@ -19,15 +19,15 @@ View.prototype.usesButton = function (buttonID)
 
 View.prototype.onActivate = function () {};
 
-View.prototype.drawGrid = function (x, y) {};
+View.prototype.drawGrid = function () {};
 View.prototype.onGrid = function (note, velocity) {};
 
 View.prototype.onPlay = function () {};
 View.prototype.onRecord = function () {};
-View.prototype.onNew = function () {};
+View.prototype.onNew = function (isPressed) {};
 View.prototype.onDuplicate = function () {};
 View.prototype.onAutomation = function () {};
-View.prototype.onFixedLength = function () {};
+View.prototype.onFixedLength = function (isDown) {};
 
 View.prototype.onQuantize = function () {};
 View.prototype.onDouble = function () {};
@@ -46,7 +46,7 @@ View.prototype.onFirstRow = function (index) {};
 View.prototype.onSecondRow = function (index) {};
 
 View.prototype.onMaster = function () {};
-View.prototype.onStop = function () {};
+View.prototype.onStop = function (isPressed) {};
 View.prototype.onScene = function (index) {};
 
 View.prototype.onVolume = function () {};
@@ -71,10 +71,15 @@ View.prototype.onAddFX = function () {};
 View.prototype.onAddTrack = function () {};
 View.prototype.onNote = function () {};
 View.prototype.onSession = function () {};
-View.prototype.onSelect = function () {};
+View.prototype.onSelect = function (isSelectPressed) {};
 View.prototype.onShift = function (isShiftPressed) {};
 
 View.prototype.onUp = function () {};
 View.prototype.onDown = function () {};
 View.prototype.onLeft = function () {};
 View.prototype.onRight = function () {};
+
+View.prototype.onValueKnobTouch = function (knob, isTouched) {};
+View.prototype.onValueKnob9Touch = function (isTouched) {};
+View.prototype.onSmallKnob1Touch = function (isTouched) {};
+View.prototype.onSmallKnob1Touch = function (isTouched) {};

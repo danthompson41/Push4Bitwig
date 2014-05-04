@@ -36,47 +36,45 @@ function SessionView ()
 }
 SessionView.prototype = new BaseView ();
 
-SessionView.prototype.updateNoteMapping = function ()
+SessionView.prototype.onFirstRow = function (index)
 {
-	noteInput.setKeyTranslationTable (initArray (-1, 128));
-};
-
-SessionView.prototype.updateArrows = function ()
-{
-	output.sendCC (PUSH_BUTTON_LEFT, this.canScrollLeft ? BUTTON_ON : BLACK);
-	output.sendCC (PUSH_BUTTON_RIGHT, this.canScrollRight ? BUTTON_ON : BLACK);
-	output.sendCC (PUSH_BUTTON_UP, this.canScrollUp ? BUTTON_ON : BLACK);
-	output.sendCC (PUSH_BUTTON_DOWN, this.canScrollDown ? BUTTON_ON : BLACK);
+	if (this.push.isShiftPressed())
+		trackBank.getTrack(index).returnToArrangement();
+	else
+		BaseView.prototype.onFirstRow.call (this, index);
 };
 
 SessionView.prototype.onActivate = function ()
 {
-	output.sendCC (PUSH_BUTTON_NOTE, BUTTON_OFF);
-	output.sendCC (PUSH_BUTTON_SESSION, BUTTON_ON);
-	this.updateNoteMapping ();
+	BaseView.prototype.onActivate.call (this);
+
+	push.setButton (PUSH_BUTTON_NOTE, PUSH_BUTTON_STATE_ON);
+	push.setButton (PUSH_BUTTON_SESSION, PUSH_BUTTON_STATE_HI);
 	for (var i = 0; i < 8; i++)
 		trackBank.getTrack (i).getClipLauncherSlots ().setIndication (true);
-	this.updateArrows ();
 	for (var i = PUSH_BUTTON_SCENE1; i <= PUSH_BUTTON_SCENE8; i++)
-		output.sendCC (i, 19);
-	updateMode ();
+		push.setButton (i, PUSH_COLOR_SCENE_GREEN);
 };
 
 SessionView.prototype.usesButton = function (buttonID)
 {
 	switch (buttonID)
 	{
-		case PUSH_BUTTON_SELECT:
 		case PUSH_BUTTON_ADD_EFFECT:
 		case PUSH_BUTTON_ADD_TRACK:
 		case PUSH_BUTTON_REPEAT:
 		case PUSH_BUTTON_ACCENT:
 		case PUSH_BUTTON_USER_MODE:
 		case PUSH_BUTTON_DUPLICATE:
-		case PUSH_BUTTON_FIXED_LENGTH:
 			return false;
 	}
 	return true;
+};
+
+SessionView.prototype.onNew = function (isPressed)
+{
+	this.newPressed = isPressed;
+	push.setButton (PUSH_BUTTON_NEW, isPressed ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
 };
 
 SessionView.prototype.onGrid = function (note, velocity)
@@ -90,16 +88,23 @@ SessionView.prototype.onGrid = function (note, velocity)
 	
 	var slot = tracks[t].slots[s];
 	var slots = trackBank.getTrack (t).getClipLauncherSlots ();
-	if (tracks[t].recarm)
+	
+	if (this.newPressed)
 	{
-		if (slot.isRecording)
-			slots.launch (s);
-		else
-			slots.record (s);
+		if (!slot.hasContent)
+			slots.createEmptyClip (s, Math.pow (2, currentNewClipLength));
 	}
-	else
+	else if (!this.push.isSelectPressed ())
 	{
-		slots.launch (s);
+		if (tracks[t].recarm)
+		{
+			if (slot.isRecording)
+				slots.launch (s);
+			else
+				slots.record (s);
+		}
+		else
+			slots.launch (s);
 	}
  	slots.select (s);
 };
@@ -151,36 +156,23 @@ SessionView.prototype.onScene = function (scene)
 	trackBank.launchScene (scene);
 };
 
-SessionView.prototype.onStop = function ()
+SessionView.prototype.drawGrid = function ()
 {
-	trackBank.getClipLauncherScenes ().stop ();
-};
-
-SessionView.prototype.drawGrid = function (x, y)
-{
-	var port = host.getMidiOutPort (0);
-	if (x && y)
-		this.drawPad (port, tracks[x].slots[y], x, y, tracks[x].recarm);
-	else
+	for (var i = 0; i < 8; i++)
 	{
-		for (var i = 0; i < 8; i++)
-		{
-			var t = tracks[i];
-			for (var j = 0; j < 8; j++)
-				this.drawPad (port, t.slots[j], i, j, t.recarm);
-		}
+		var t = tracks[i];
+		for (var j = 0; j < 8; j++)
+			this.drawPad (t.slots[j], i, j, t.recarm);
 	}
 };
 
-SessionView.prototype.drawPad = function (port, slot, x, y, isArmed)
+SessionView.prototype.drawPad = function (slot, x, y, isArmed)
 {
-	var color = slot.hasContent ? (slot.color ? slot.color : ORANGE_HI) : (isArmed ? RED_LO : BLACK);
+	var color = slot.isRecording ? PUSH_COLOR_RED_HI : 
+					(slot.hasContent ? 
+						(slot.color ? slot.color : PUSH_COLOR_ORANGE_HI) : 
+						(isArmed ? PUSH_COLOR_RED_LO : PUSH_COLOR_BLACK));
 	var n = 92 + x - 8 * y;
-	port.sendMidi (0x90, n, color);
-	if (slot.isQueued)
-		port.sendMidi (0x90 + 14, n, slot.isRecording ? RED_HI : GREEN_HI);
-	else if (slot.isPlaying)
-		port.sendMidi (0x90 + 10, n, GREEN_HI);
-	else if (slot.isRecording)
-		port.sendMidi (0x90, n, RED_HI);
+	push.pads.light (n, color);
+	push.pads.blink (n, (slot.isQueued || slot.isPlaying) ? (slot.isRecording ? PUSH_COLOR_RED_HI : PUSH_COLOR_GREEN_HI) : PUSH_COLOR_BLACK, slot.isQueued);
 };

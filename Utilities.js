@@ -70,11 +70,3 @@ function optimizeName (name, length)
 	}
 	return name;
 }
-
-function reverseStr (str)
-{
-	var r = '';
-	for (var i = 0; i < str.length; i++)
-		r = str[i] + r;
-	return r;
-}

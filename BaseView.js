@@ -1,4 +1,5 @@
 // Written by Jürgen Moßgraber - mossgrabers.de
+// Contributions by Michael Schmalle
 // (c) 2014
 // Licensed under GPLv3 - http://www.gnu.org/licenses/gpl.html
 
@@ -11,7 +12,6 @@ function BaseView ()
 
 	this.stopPressed = false;
 	this.newPressed = false;
-	this.newClipLength = 4;
 	
 	this.ttLastMillis = -1;
 	this.ttLastBPM = -1;
@@ -20,10 +20,13 @@ function BaseView ()
 BaseView.prototype = new View ();
 BaseView.prototype.constructor = BaseView;
 
+BaseView.lastNoteView = VIEW_PLAY;
+
 BaseView.prototype.onActivate = function ()
 {
 	this.updateNoteMapping ();
 	this.updateArrows ();
+	setMode (currentMode);
 };
 
 BaseView.prototype.updateNoteMapping = function ()
@@ -79,10 +82,9 @@ BaseView.prototype.onAutomation = function ()
 		transport.toggleWriteArrangerAutomation ();
 };
 
-BaseView.prototype.onFixedLength = function ()
+BaseView.prototype.onFixedLength = function (isDown)
 {
-	// TODO Not possible?
-	host.showPopupNotification ("Fixed Length: Function not supported (yet).");
+	setMode (isDown ? MODE_FIXED : previousMode);
 };
 
 BaseView.prototype.onQuantize = function ()
@@ -254,6 +256,11 @@ BaseView.prototype.onValueKnob = function (index, value)
 			fxparams[index].value = changeValue (value, fxparams[index].value);
 			device.getParameter (index).set (fxparams[index].value, 128);
 			break;
+		
+		case MODE_MACRO:
+			macros[index].value = changeValue (value, macros[index].value);
+			device.getMacro (index).getAmount ().set (macros[index].value, 128);
+			break;
 			
 		case MODE_SCALES:
 			if (index == 0)
@@ -271,6 +278,9 @@ BaseView.prototype.onValueKnob = function (index, value)
 
 BaseView.prototype.onValueKnobTouch = function (index, isTouched)
 {
+	// See https://github.com/git-moss/Push4Bitwig/issues/32
+	// We keep the code if an additional focus becomes available
+	/*
 	switch (currentMode)
 	{
 		case MODE_MASTER:
@@ -341,6 +351,7 @@ BaseView.prototype.onValueKnobTouch = function (index, isTouched)
 			// Not used
 			break;
 	}
+	*/
 };
 
 // Master Volume
@@ -351,7 +362,8 @@ BaseView.prototype.onValueKnob9 = function (value)
 
 BaseView.prototype.onValueKnob9Touch = function (isTouched)
 {
-	masterTrack.getVolume ().setIndication (isTouched);
+	if (currentMode != MODE_MASTER)
+		masterTrack.getVolume ().setIndication (isTouched);
 };
 
 BaseView.prototype.onFirstRow = function (index)
@@ -371,6 +383,10 @@ BaseView.prototype.onFirstRow = function (index)
 			this.updateNoteMapping ();
 			break;
 
+		case MODE_FIXED:
+			currentNewClipLength = index;
+			break;
+			
 		case MODE_MASTER:
 			// Not used
 			break;
@@ -407,35 +423,34 @@ BaseView.prototype.onSecondRow = function (index)
 
 BaseView.prototype.onMaster = function ()
 {
-	previousMode = currentMode;
-	currentMode = MODE_MASTER;
+	setMode (MODE_MASTER);
 	masterTrack.select ();
 };
 
 BaseView.prototype.onVolume = function ()
 {
-	currentMode = MODE_VOLUME;
-	updateMode ();
+	setMode (MODE_VOLUME);
 };
 
 BaseView.prototype.onPanAndSend = function ()
 {
-	currentMode++;
-	if (currentMode < MODE_PAN || currentMode > MODE_SEND6)
-		currentMode = MODE_PAN;
-	updateMode ();
+	var mode = currentMode + 1;
+	if (mode < MODE_PAN || mode > MODE_SEND6)
+		mode = MODE_PAN;
+	setMode (mode);
 };
 
 BaseView.prototype.onTrack = function ()
 {
-	currentMode = MODE_TRACK;
-	updateMode ();
+	setMode (MODE_TRACK);
 };
 
 BaseView.prototype.onDevice = function ()
 {
-	currentMode = MODE_DEVICE;
-	updateMode ();
+	if (currentMode == MODE_DEVICE)
+		setMode (MODE_MACRO);
+	else
+		setMode (MODE_DEVICE);
 };
 
 BaseView.prototype.onBrowse = function ()
@@ -447,18 +462,30 @@ BaseView.prototype.onBrowse = function ()
 BaseView.prototype.onDeviceLeft = function ()
 {
 	if (currentMode == MODE_DEVICE)
+	{
 		device.previousParameterPage ();
-	else
+		return;
+	}
+	if (canScrollTrackUp)
+	{
 		trackBank.scrollTracksPageUp ();
+		host.scheduleTask (selectTrack, [7], 100);
+	}
 };
 
 // Inc Track or Device Parameter Bank
 BaseView.prototype.onDeviceRight = function ()
 {
 	if (currentMode == MODE_DEVICE)
+	{
 		device.nextParameterPage ();
-	else
+		return;
+	}
+	if (canScrollTrackDown)
+	{
 		trackBank.scrollTracksPageDown ();
+		host.scheduleTask (selectTrack, [0], 100);
+	}
 };
 
 BaseView.prototype.onMute = function ()
@@ -483,17 +510,7 @@ BaseView.prototype.onSolo = function ()
 
 BaseView.prototype.onScales = function (isDown)
 {
-	if (isDown)
-	{
-		previousMode = currentMode;
-		currentMode = MODE_SCALES;
-	}
-	else
-	{
-		currentMode = previousMode;
-		previousMode = null;
-	}
-	updateMode ();
+	setMode (isDown ? MODE_SCALES : previousMode);
 };
 
 BaseView.prototype.onOctaveDown = function ()
@@ -516,27 +533,29 @@ BaseView.prototype.onAddFX = function ()
 
 BaseView.prototype.onAddTrack = function ()
 {
-	// TODO Not possible?
-	host.showPopupNotification ("Add Track: Function not supported (yet).");
-};
-BaseView.prototype.onRepeat = function ()
-{
 	this.push.setActiveView (VIEW_PLAY_DRUMS);
-}
+	// TODO Not possible?
+	//host.showPopupNotification ("Add Track: Function not supported (yet).");
+};
+
 BaseView.prototype.onNote = function ()
 {
-	//channel selectedTrack = getSelectedTrack ();
-	//PrimaryDevice primaryDevice = selectedTrack.getPrimaryDevice ();
-	//var set = PrimaryDevice.DeviceType;
-	//if (PrimaryDevice.DeviceType[] == 'DrumMachine')
-	//	this.push.setActiveView (VIEW_PLAY_DRUMS)
-	if (this.push.isActiveView (VIEW_PLAY))
-		this.push.setActiveView (VIEW_SEQUENCER);
-	else
-		this.push.setActiveView (VIEW_PLAY);
+	BaseView.lastNoteView = this.push.isActiveView (VIEW_SESSION) ? BaseView.lastNoteView :
+								(this.push.isActiveView (VIEW_PLAY) ? VIEW_SEQUENCER : VIEW_PLAY);
+	this.push.setActiveView (BaseView.lastNoteView);
 };
 
 BaseView.prototype.onSession = function ()
 {
+	if (this.push.isActiveView (VIEW_SESSION))
+		return;
+	BaseView.lastNoteView = this.push.isActiveView (VIEW_PLAY) ? VIEW_PLAY : VIEW_SEQUENCER;
 	this.push.setActiveView (VIEW_SESSION);
 };
+
+function selectTrack (index)
+{
+	var t = trackBank.getTrack (index);
+	if (t != null)
+		t.select ();
+}

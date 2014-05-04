@@ -1,4 +1,5 @@
 // Written by Jürgen Moßgraber - mossgrabers.de
+// Contributions by Michael Schmalle
 // (c) 2014
 // Licensed under GPLv3 - http://www.gnu.org/licenses/gpl.html
 
@@ -15,6 +16,8 @@ var MODE_SEND4  = 8;
 var MODE_SEND5  = 9;
 var MODE_SEND6  = 10;
 var MODE_SCALES = 11;
+var MODE_MACRO  = 12;
+var MODE_FIXED  = 13;
 
 // Static  Headers
 var PARAM_NAMES_MASTER = 'Volume   Pan                                                        ';
@@ -30,6 +33,7 @@ var PARAM_NAMES_SEND   =
 	'Send 5   Send 5  Send 5   Send 5  Send 5   Send 5  Send 5   Send 5  ',
 	'Send 6   Send 6  Send 6   Send 6  Send 6   Send 6  Send 6   Send 6  '
 ];
+var CLIP_LENGTHS = [ '1 Beat', '2 Beats', '1 Bar', '2 Bars', '4 Bars', '8 Bars', '16 Bars', '32 Bars' ];
 
 var BITWIG_COLORS =
 [
@@ -66,9 +70,9 @@ var INC_FRACTION_TIME      = 1.0;	    // 1 beat
 var INC_FRACTION_TIME_SLOW = 1.0 / 20;	// 1/20th of a beat
 var TEMPO_RESOLUTION       = 647;
 
-var VIEW_PLAY       = 0;
-var VIEW_SESSION    = 1;
-var VIEW_SEQUENCER  = 2;
+var VIEW_PLAY      = 0;
+var VIEW_SESSION   = 1;
+var VIEW_SEQUENCER = 2;
 var VIEW_PLAY_DRUMS = 3;
 
 
@@ -80,13 +84,16 @@ load("BaseView.js");
 load("Push.js");
 load("Scales.js");
 load("PlayView.js");
-load("PlayViewDrums.js");
+load("PlayDrumsView.js")
 load("SessionView.js");
 load("SequencerView.js");
 
-var previousMode = null;
+var displayScheduled = false;
+
+var previousMode = MODE_TRACK;
 var currentMode = MODE_TRACK;
-var tempo = 120;
+var tempo = 100;	// Note: For real BPM add 20
+var quarterNoteInMillis = calcQuarterNoteInMillis (tempo);
 var master =
 { 
 	selected: false,
@@ -104,6 +111,7 @@ for (var i = 0; i < 8; i++)
 		slots: [{ index: 0 }, { index: 1 }, { index: 2 }, { index: 3 }, { index: 4 }, { index: 5 }, { index: 6 }, { index: 7 }]
 	};
 var fxparams = [ { index: 0, name: '' }, { index: 1, name: '' }, { index: 2, name: '' }, { index: 3, name: '' }, { index: 4, name: '' }, { index: 5, name: '' }, { index: 6, name: '' }, { index: 7, name: '' } ];
+var macros = [ { index: 0, name: '' }, { index: 1, name: '' }, { index: 2, name: '' }, { index: 3, name: '' }, { index: 4, name: '' }, { index: 5, name: '' }, { index: 6, name: '' }, { index: 7, name: '' } ];
 var selectedDevice =
 {
 	name: 'None',
@@ -115,17 +123,20 @@ var application = null;
 var device = null;
 var masterTrack = null;
 var trackBank = null;
-var cursorTrack = null;
 var noteInput = null;
 
-var currentScaleOffset = 0; // C
-var currentScale       = 1;	// Major
-var currentOctave      = 0;
+var canScrollTrackUp   = false;
+var canScrollTrackDown = false;
+
+var currentScaleOffset   = 0; // C
+var currentScale         = 1; // Major
+var currentOctave        = 0;
+var currentNewClipLength = 2; // 1 Bar
 
 var output        = null;
 var push          = null;
 var playView      = null;
-var playViewDrums = null;
+var playDrumsView = null;
 var sessionView   = null;
 var sequencerView = null;
 
@@ -150,14 +161,13 @@ function init()
 	output = new MidiOutput ();
 	push = new Push (output);
 	playView = new PlayView ();
-	playViewDrums = new PlayViewDrums ();
+	playDrumsView = new PlayDrumsView ();
 	sessionView = new SessionView ();
 	sequencerView = new SequencerView ();
 	push.addView (VIEW_PLAY, playView);
-	push.addView (VIEW_PLAY_DRUMS, playViewDrums);
 	push.addView (VIEW_SESSION, sessionView);
 	push.addView (VIEW_SEQUENCER, sequencerView);
-
+	push.addView (VIEW_PLAY_DRUMS, playDrumsView);
 
 	
 	// Click
@@ -179,6 +189,7 @@ function init()
 	transport.getTempo ().addValueObserver(TEMPO_RESOLUTION, function (value)
 	{
 		tempo = value;
+		quarterNoteInMillis = calcQuarterNoteInMillis (tempo);
 	});
 	
 	// Master Track name
@@ -190,10 +201,7 @@ function init()
 	masterTrack.addIsSelectedObserver (function (isSelected)
 	{
 		master.selected = isSelected;
-		if (isSelected)
-			previousMode = currentMode;
-		currentMode = isSelected ? MODE_MASTER : (previousMode ? previousMode : MODE_TRACK);
-		updateMode ();
+		setMode (isSelected ? MODE_MASTER : previousMode);
 	});
 	
 	// Master Track Mute
@@ -218,7 +226,7 @@ function init()
 	{
 		master.volume = value;
 	});
-	v.addValueDisplayObserver (8, "", function (text)
+	v.addValueDisplayObserver (8, '', function (text)
 	{
 		master.volumeStr = text;
 	});
@@ -229,9 +237,18 @@ function init()
 	{
 		master.pan = value;
 	});
-	p.addValueDisplayObserver (8, "", function (text)
+	p.addValueDisplayObserver (8, '', function (text)
 	{
 		master.panStr = text;
+	});
+	
+ 	trackBank.addCanScrollTracksDownObserver (function (canScroll)
+	{
+		canScrollTrackDown = canScroll;
+	});
+	trackBank.addCanScrollTracksUpObserver (function (canScroll)
+	{
+		canScrollTrackUp = canScroll;
 	});
 	
 	for (var i = 0; i < 8; i++)
@@ -248,16 +265,7 @@ function init()
 		{
 			tracks[index].selected = isSelected;
 			if (isSelected)
-			{
-				if (currentMode == MODE_MASTER)
-				{
-					if (previousMode != MODE_MASTER && previousMode != MODE_SCALES)
-						currentMode = previousMode;
-					else
-						currentMode = MODE_TRACK;
-				}
-				updateMode ();
-			}
+				setMode (MODE_TRACK);
 			if (push.isActiveView (VIEW_PLAY))
 				push.getActiveView ().updateNoteMapping ();
 		}));
@@ -284,7 +292,7 @@ function init()
 		{
 			tracks[index].volume = value;
 		}));
-		v.addValueDisplayObserver (8, "", doIndex (i, function (index, text)
+		v.addValueDisplayObserver (8, '', doIndex (i, function (index, text)
 		{
 			tracks[index].volumeStr = text;
 		}));
@@ -295,7 +303,7 @@ function init()
 		{
 			tracks[index].pan = value;
 		}));
-		p.addValueDisplayObserver (8, "", doIndex (i, function (index, text)
+		p.addValueDisplayObserver (8, '', doIndex (i, function (index, text)
 		{
 			tracks[index].panStr = text;
 		}));
@@ -341,7 +349,7 @@ function init()
 			{
 				tracks[index1].sends[index2].volume = value;
 			}));
-			s.addValueDisplayObserver (8, "", doDoubleIndex (i, j, function (index1, index2, text)
+			s.addValueDisplayObserver (8, '', doDoubleIndex (i, j, function (index1, index2, text)
 			{
 				tracks[index1].sends[index2].volumeStr = text;
 			}));
@@ -372,13 +380,27 @@ function init()
 			fxparams[index].value = value;
 		}));
 		// Parameter value text
-		p.addValueDisplayObserver (8, "",  doIndex (i, function (index, value)
+		p.addValueDisplayObserver (8, '',  doIndex (i, function (index, value)
 		{
 			fxparams[index].valueStr = value;
 		}));
+		
+		var m = device.getMacro (i);
+		m.addLabelObserver (8, '', doIndex (i, function (index, name)
+ 		{
+			macros[index].name = name;
+		}));
+		m.getAmount().addValueObserver (128, doIndex (i, function (index, value)
+		{
+			macros[index].value = value;
+		}));
+		// Macro value text
+		m.getAmount().addValueDisplayObserver (8, '',  doIndex (i, function (index, value)
+		{
+			macros[index].valueStr = value;
+		}));
 	}
 	
-	updateMode ();
 	push.setActiveView (VIEW_PLAY);
 	
 	println ("Initialized.");
@@ -391,8 +413,16 @@ function exit()
 
 function flush ()
 {
-	updateDisplay ();
-	push.display.flush ();
+	if (!displayScheduled)
+	{
+		host.scheduleTask (function ()
+		{
+			updateDisplay ();
+			push.display.flush ();
+			displayScheduled = false;
+		}, null, 5);
+		displayScheduled = true;
+	}
 	push.redrawGrid ();
 }
 
@@ -417,14 +447,64 @@ function getSelectedSlot (track)
 	return -1;
 }
 
-function updateMode ()
+function setMode (mode)
 {
-	push.setButton (PUSH_BUTTON_MASTER, currentMode == MODE_MASTER ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
-	push.setButton (PUSH_BUTTON_SCALES, currentMode == MODE_SCALES ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
-	push.setButton (PUSH_BUTTON_DEVICE, currentMode == MODE_DEVICE ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
-	push.setButton (PUSH_BUTTON_TRACK, currentMode == MODE_TRACK ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
-	push.setButton (PUSH_BUTTON_VOLUME, currentMode == MODE_VOLUME ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
-	push.setButton (PUSH_BUTTON_PAN_SEND, currentMode >= MODE_PAN && currentMode <= MODE_SEND6 ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
+	if (mode == null)
+		mode = MODE_TRACK;
+	if (mode != currentMode)
+	{
+		if (currentMode != MODE_SCALES && currentMode != MODE_FIXED)
+			previousMode = currentMode;
+		currentMode = mode;
+	}
+	updateMode (-1);
+	updateMode (currentMode);
+}
+
+function updateMode (mode)
+{
+	var isMaster = mode == MODE_MASTER;
+	var isTrack  = mode == MODE_TRACK;
+	var isVolume = mode == MODE_VOLUME;
+	var isPan    = mode == MODE_PAN;
+	var isDevice = mode == MODE_DEVICE;
+	var isMacro  = mode == MODE_MACRO;
+	var isScales = mode == MODE_SCALES;
+	var isFixed  = mode == MODE_FIXED;
+
+	masterTrack.getVolume ().setIndication (isMaster);
+	masterTrack.getPan ().setIndication (isMaster);
+	
+	var selectedTrack = getSelectedTrack ();
+	for (var i = 0; i < 8; i++)
+	{
+		var t = trackBank.getTrack (i);
+		var hasTrackSel = selectedTrack != null && selectedTrack.index == i && mode == MODE_TRACK;
+		t.getVolume ().setIndication (isVolume || hasTrackSel);
+		t.getPan ().setIndication (isPan || hasTrackSel);
+		for (var j = 0; j < 6; j++)
+		{
+			isEnabled = mode == MODE_SEND1 && j == 0 ||
+			            mode == MODE_SEND2 && j == 1 ||
+			            mode == MODE_SEND3 && j == 2 ||
+			            mode == MODE_SEND4 && j == 3 ||
+			            mode == MODE_SEND5 && j == 4 ||
+			            mode == MODE_SEND6 && j == 5 || 
+						hasTrackSel;
+			t.getSend (j).setIndication (isEnabled);
+		}
+
+		device.getParameter (i).setIndication (isDevice);
+		device.getMacro (i).getAmount ().setIndication (isMacro);
+	}
+			
+	push.setButton (PUSH_BUTTON_MASTER, isMaster ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
+	push.setButton (PUSH_BUTTON_TRACK, isTrack ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
+	push.setButton (PUSH_BUTTON_VOLUME, isVolume ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
+	push.setButton (PUSH_BUTTON_PAN_SEND, mode >= MODE_PAN && mode <= MODE_SEND6 ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
+	push.setButton (PUSH_BUTTON_DEVICE, isDevice || isMacro ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
+	push.setButton (PUSH_BUTTON_SCALES, isScales ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
+	push.setButton (PUSH_BUTTON_FIXED_LENGTH, isFixed ? PUSH_BUTTON_STATE_HI : PUSH_BUTTON_STATE_ON);
 }
 
 function updateDisplay ()
@@ -460,7 +540,7 @@ function updateDisplay ()
 		case MODE_TRACK:
 			d.setRow (0, PARAM_NAMES_TRACK);
 			if (t == null)
-				d.clearRow (1).clearRow (2);
+				d.clearRow (1).done (1).clearRow (2).done (2);
 			else
 			{
 				d.setCell (1, 0, t.volumeStr, PushDisplay.FORMAT_RAW)
@@ -539,6 +619,21 @@ function updateDisplay ()
 			 .clearBlock (3, 2).clearCell (3, 6)
 			 .setCell (3, 7, selectedDevice.enabled ? 'Enabled' : 'Disabled').done (3);
 			break;
+				
+		case MODE_MACRO:
+			for (var i = 0; i < 8; i++)
+			{
+				if (macros[i].name.length == 0)
+					d.clearCell (0, i).clearCell (1, i).clearCell (2, i);
+				else				
+				{
+					d.setCell (0, i, macros[i].name, PushDisplay.FORMAT_RAW)
+					 .setCell (1, i, macros[i].valueStr, PushDisplay.FORMAT_RAW)
+					 .setCell (2, i, macros[i].value, PushDisplay.FORMAT_VALUE);
+				}
+			}
+			d.done (0).done (1).done (2);
+			break;
 			
 		case MODE_SCALES:
 			var o = 2 + currentOctave;
@@ -571,9 +666,24 @@ function updateDisplay ()
 				push.setButton (102 + i, i == 0 || i == 7 ? PUSH_COLOR_ORANGE_LO : PUSH_COLOR_GREEN_LO);
 			}
 			break;
+			
+		case MODE_FIXED:
+			d.clearRow (0).done (0).clearRow (1).done (1)
+			 .setBlock (2, 0, 'New Clip Length:').clearBlock (2, 1).clearBlock (2, 2).clearBlock (2, 3)
+			 .done (2);
+			for (var i = 0; i < 8; i++)
+				d.setCell (3, i, (currentNewClipLength == i ? RIGHT_ARROW : ' ') + CLIP_LENGTHS[i]);
+			d.done (3);
+			
+			for (var i = 0; i < 8; i++)
+			{
+				push.setButton (20 + i, PUSH_COLOR_GREEN_LO-4);
+				push.setButton (102 + i, PUSH_COLOR_BLACK);
+			}
+			break;
 	}
 	
-	if (currentMode == MODE_DEVICE || currentMode == MODE_SCALES || currentMode == MODE_MASTER)
+	if (currentMode == MODE_DEVICE || currentMode == MODE_SCALES || currentMode == MODE_MASTER || currentMode == MODE_FIXED)
 		return;
 
 	// Send, Mute, Automation
@@ -596,7 +706,7 @@ function updateDisplay ()
 	{
 		var isSel = i == sel;
 		var n = optimizeName (tracks[i].name, isSel ? 7 : 8);
-		d.setCell (3, i, isSel ? RIGHT_ARROW + n : n, PushDisplay.FORMAT_RAW)
+		d.setCell (3, i, isSel ? RIGHT_ARROW + n : n, PushDisplay.FORMAT_RAW);
 		
 		// Light up selection and record/monitor buttons
 		push.setButton (20 + i, isSel ? PUSH_COLOR_ORANGE_LO : PUSH_COLOR_BLACK);
@@ -624,4 +734,9 @@ function getColorIndex (red, green, blue)
 function changeValue (control, value)
 {
 	return control <= 61 ? Math.min (value + INC_FRACTION_VALUE, 127) : Math.max (value - INC_FRACTION_VALUE, 0);
+}
+
+function calcQuarterNoteInMillis (tempo)
+{
+	return 60000 / (tempo + 20);
 }
